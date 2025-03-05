@@ -1,6 +1,10 @@
 export const typeDefs = `
 	type Query {
-		analyses: [Analysis!]!
+        genes: [Gene]
+	}
+
+	type Mutation {
+		uploadFile: Boolean!
 	}
 
 	type User {
@@ -31,16 +35,15 @@ export const typeDefs = `
 	}
 
 	type Gene {
-		id: ID!
-		symbol: String!
-		logFC: Float
-		AveExpr: Float
-		t: Float
-		PValue: Float
-		adjPValue: Float
-		B: Float
-		_row: String
-	}
+        id: ID!
+        symbol: String!
+        logFC: Float!
+        AveExpr: Float!
+        t: Float!
+        PValue: Float!
+        adjPValue: Float!
+        B: Float!
+    }
 
 	type Dataset {
 		id: ID!
@@ -50,20 +53,6 @@ export const typeDefs = `
 		size: Int!
 	}
 
-	input GeneExpressionInput {
-		symbol: String!
-		logFC: Float!
-		AveExpr: Float!
-		t: Float!
-		PValue: Float!
-		adjPValue: Float!
-		B: Float!
-		_row: String
-	}
-
-	type Mutation {
-		insertGeneExpressions(data: [GeneExpressionInput]!): [Gene]  
-	}
 
 	enum AnalysisStatus {
 		FETCHING

@@ -1,51 +1,38 @@
-import { mockDataset, mockGenes } from "./mock.js";
-// Tell Apollo server how we should fetch data associated with each type
-export const resolvers = {
-    Query: {
-        analyses: () => analyses,
-    },
-    Mutation: {
-        insertGeneExpressions: (parent, { data }) => {
-            const gene_received = data.map(gene => {
-                const newGene = {
-                    id: 100,  // Generate unique ID
-                    symbol: gene.symbol,
-                    logFC: gene.logFC,  // Add logFC from the input data
-                    AveExpr: gene.AveExpr,  // Add AveExpr from the input data
-                    t: gene.t,  // Add t from the input data
-                    PValue: gene.PValue,  // Add PValue from the input data
-                    adjPValue: gene.adjPValue,  // Add adjPValue from the input data
-                    B: gene.B,
-                    _row: gene._row
-                };
-                return newGene;
-            });
+import fs from 'fs';
+import csv from "csv-parser";
 
-            console.log("Received gene expressions:", gene_received);
-
-            return gene_received;
-        }
-    }
+const readCSVFile = () => {
+    return new Promise((resolve, reject) => {
+        const results = [];
+        const filePath = '/Users/rin/Desktop/R-code/significantGenes.csv';
+        fs.createReadStream(filePath)
+            .pipe(csv())
+            .on("data", (row) => results.push(row))
+            .on("end", () => resolve(results))
+            .on("error", reject);
+    });
 };
 
+const formatGeneData = (csvData) => {
+    return csvData.map((row, index) => ({
+        id: index + 1,
+        symbol: row.symbol,
+        logFC: parseFloat(row.logFC),
+        AveExpr: parseFloat(row.AveExpr),
+        t: parseFloat(row.t),
+        PValue: parseFloat(row.PValue),
+        adjPValue: parseFloat(row.adjPValue),
+        B: parseFloat(row.B),
+    }));
+};
 
-enum AnalysisStatus {
-    FETCHING,
-    PARSING,
-    ANALYZING,
-    COMPLETED,
-    FAILED,
-}
-
-
-const analyses = [
-    {
-        id: 1,
-        date: new Date(),
-        status: AnalysisStatus.FETCHING,
-        dataset: mockDataset,
-        results: mockGenes,
-        visualization: "./visualization.png",
+export const resolvers = {
+    Query: {
+        genes: async () => {
+            console.log("📂 Fetching genes from CSV...");
+            const rawData = await readCSVFile();
+            return formatGeneData(rawData);
+        },
     },
-];
+};
 
