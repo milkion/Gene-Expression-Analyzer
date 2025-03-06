@@ -26,6 +26,15 @@ interface DeleteAnalysisArgs {
 	id: string;
 }
 
+interface UpdateAnalysisWithResultsArgs {
+	id: string;
+	results: any; // This would be AnalysisResult input
+}
+
+interface CreateAnalysisResultArgs {
+	results: any; // This would be AnalysisResult input
+}
+
 // Tell Apollo server how we should fetch data associated with each type
 const resolvers = {
 	Query: {
@@ -72,7 +81,7 @@ const resolvers = {
 					name: name,
 					description: description,
 					uploadedAt: new Date(),
-					size: 0,
+					size: 0, // To change (or maybe remove)
 				});
 
 				const savedDataset = await dataset.save();
@@ -127,10 +136,83 @@ const resolvers = {
 				throw new Error("Failed to delete analysis: Unknown error");
 			}
 		},
+		async updateAnalysisWithResults(
+			_: ResolverParent,
+			{ id, results }: UpdateAnalysisWithResultsArgs
+		): Promise<any> {
+			try {
+				// Find the analysis to update
+				const analysis = await Analysis.findById(id);
+
+				if (!analysis) {
+					throw new Error(`Analysis with ID ${id} not found`);
+				}
+
+				// Create results and save them
+				const resultIds = [];
+
+				if (results.results && results.results.length > 0) {
+					for (const resultData of results.results) {
+						// Create or find gene
+						let gene;
+						if (resultData.gene.id) {
+							gene = await Gene.findById(resultData.gene.id);
+							if (!gene) {
+								gene = new Gene(resultData.gene);
+								await gene.save();
+							}
+						} else {
+							gene = new Gene(resultData.gene);
+							await gene.save();
+						}
+
+						// Create result
+						const result = new Result({
+							gene: gene._id,
+							analysis: id,
+							logFC: resultData.logFC,
+							avgExpr: resultData.avgExpr,
+							tValue: resultData.tValue,
+							pValue: resultData.pValue,
+							adjustedPValue: resultData.adjustedPValue,
+							bStat: resultData.bStat,
+						});
+
+						const savedResult = await result.save();
+						resultIds.push(savedResult._id);
+					}
+				}
+
+				// Update analysis with results and status
+				analysis.results = resultIds;
+				analysis.status = "COMPLETED";
+				analysis.visualization = results.visualization || null;
+
+				const updatedAnalysis = await analysis.save();
+
+				// Populate related fields
+				await updatedAnalysis.populate("dataset");
+				await updatedAnalysis.populate({
+					path: "results",
+					populate: { path: "gene" },
+				});
+
+				return updatedAnalysis;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(
+						`Failed to update analysis with results: ${error.message}`
+					);
+				}
+				throw new Error(
+					"Failed to update analysis with results: Unknown error"
+				);
+			}
+		},
 	},
 	// Field resolvers
 	Analysis: {
-		async results(parent: any): Promise<any[]> {
+		async result(parent: any): Promise<any[]> {
 			try {
 				if (parent.results.length === 0) return [];
 
@@ -173,6 +255,31 @@ const resolvers = {
 					throw new Error(`Failed to fetch gene: ${error.message}`);
 				}
 				throw new Error("Failed to fetch gene: Unknown error");
+			}
+		},
+	},
+	AnalysisResult: {
+		async results(parent: any): Promise<any[]> {
+			try {
+				if (!parent.results || parent.results.length === 0) return [];
+
+				// If the results are already populated objects, return them
+				if (
+					typeof parent.results[0] !== "string" &&
+					!(parent.results[0] instanceof mongoose.Types.ObjectId)
+				) {
+					return parent.results;
+				}
+
+				// Otherwise, fetch and populate them
+				return await Result.find({ _id: { $in: parent.results } }).populate(
+					"gene"
+				);
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to fetch results: ${error.message}`);
+				}
+				throw new Error("Failed to fetch results: Unknown error");
 			}
 		},
 	},

@@ -14,8 +14,12 @@ const typeDefs = gql`
 		# Creates a new analysis
 		createAnalysis(datasetInput: DatasetInput): Analysis!
 
+		# Update an analysis with results
+		updateAnalysisWithResults(id: ID!, results: AnalysisResultInput): Analysis!
+
 		# Deletes an analysis by ID
 		deleteAnalysis(id: ID!): Boolean!
+
 	}
 
 	type User {
@@ -82,12 +86,34 @@ const typeDefs = gql`
 	}
 
 	"""
-	DatasetInput - the input for creating a new dataset, used in 
+	DatasetInput - the input for creating a new dataset, used in
 	createAnalysis mutation.
 	"""
 	input DatasetInput {
 		name: String!
 		description: String
+	}
+
+	input AnalysisResultInput {
+		results: [ResultInput!]!
+		visualization: String
+	}
+
+	input ResultInput {
+		gene: GeneInput!
+		logFC: Float!
+		avgExpr: Float!
+		tValue: Float!
+		pValue: Float!
+		adjustedPValue: Float!
+		bStat: Float!
+	}
+
+	input GeneInput {
+		symbol: String!
+		description: String
+		function: String
+		pathway: String
 	}
 
 	enum AnalysisStatus {
