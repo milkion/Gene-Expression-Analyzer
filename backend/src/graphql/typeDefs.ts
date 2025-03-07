@@ -97,6 +97,8 @@ const typeDefs = gql`
 		COMPLETED
 		FAILED
 	}
+
+	
 `;
 
 // Mock data generation (for frontend development)

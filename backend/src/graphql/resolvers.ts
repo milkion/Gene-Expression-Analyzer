@@ -26,8 +26,25 @@ interface DeleteAnalysisArgs {
 	id: string;
 }
 
+interface GeneData {
+	symbol: string;
+	logFC: number;
+	AveExpr: number;
+	t: number;
+	PValue: number;
+	adjPValue: number;
+	B: number;
+	_row: string;
+}
+
+export interface ResponseData {
+	significantGenes: GeneData[];
+}
+
+
+
 // Tell Apollo server how we should fetch data associated with each type
-const resolvers = {
+export const resolvers = {
 	Query: {
 		async getAnalyses(): Promise<any[]> {
 			try {
@@ -178,4 +195,4 @@ const resolvers = {
 	},
 };
 
-export { resolvers };
+
