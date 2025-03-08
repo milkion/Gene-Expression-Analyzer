@@ -50,10 +50,8 @@ export interface ResponseData {
 	significantGenes: GeneData[];
 }
 
-
-
 // Tell Apollo server how we should fetch data associated with each type
-export const resolvers = {
+const resolvers = {
 	Query: {
 		async getAnalyses(): Promise<any[]> {
 			try {

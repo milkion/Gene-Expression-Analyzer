@@ -19,7 +19,7 @@ library(httr)
 
 # -------------------------------------------------------------------------
 
-
+options(timeout = 600)
 gse <- getGEO("GSE16561", GSEMatrix = TRUE, AnnotGPL = TRUE)
 
 length(gse)

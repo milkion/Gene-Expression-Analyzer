@@ -73,6 +73,8 @@ const typeDefs = gql`
 		pathway: String
 	}
 
+
+
 	"""
 	Dataset - the GEO dataset that we want to process, either through
 	self import or searched (through API)
@@ -112,9 +114,8 @@ const typeDefs = gql`
 	input GeneInput {
 		symbol: String!
 		description: String
-		function: String
-		pathway: String
 	}
+	
 
 	enum AnalysisStatus {
 		FETCHING
