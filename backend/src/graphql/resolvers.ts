@@ -51,7 +51,7 @@ export interface ResponseData {
 }
 
 // Tell Apollo server how we should fetch data associated with each type
-const resolvers = {
+export const resolvers = {
 	Query: {
 		async getAnalyses(): Promise<any[]> {
 			try {
@@ -275,4 +275,4 @@ const resolvers = {
 	},
 };
 
-export { resolvers };
+
