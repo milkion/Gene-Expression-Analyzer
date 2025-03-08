@@ -12,9 +12,10 @@ const UPDATE_ANALYSIS_MUTATION = gql`
       id
       result {
         results {
+            id
           gene {
+            id
             symbol
-            description
           }
           logFC
           avgExpr
@@ -38,7 +39,6 @@ export async function updateAnalysis(id, results) {
             variables: { id, results },
         });
 
-        console.log("Mutation Response:", JSON.stringify(response, null, 2));
         return response.data.updateAnalysisWithResults;
     } catch (error) {
         console.error("GraphQL Errors:", error.graphQLErrors);
