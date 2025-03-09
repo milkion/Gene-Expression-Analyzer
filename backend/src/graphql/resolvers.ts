@@ -4,10 +4,15 @@ import Result from "../models/Result.js";
 import Gene from "../models/Gene.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
+dotenv.config(); // Load environment variables
 // Define types for resolver parameters and context
 type ResolverParent = any;
-type ResolverContext = any;
+type ResolverContext = { userId?: string }; //This ensures TypeScript knows userId exists in the context.
+
 
 // Define types for GraphQL arguments
 interface AnalysisArgs {
@@ -51,6 +56,11 @@ interface CreateUserArgs {
 	userInput: UserInput;
 }
 
+interface LoginArgs {
+	email: string;
+	password: string;
+}
+
 // Tell Apollo server how we should fetch data associated with each type
 const resolvers = {
 	Query: {
@@ -86,25 +96,20 @@ const resolvers = {
 			}
 		},
 		async me(_: ResolverParent, __: {}, context: ResolverContext): Promise<any> {
-			// This would typically check the authenticated user from context
-			// For now, returning a placeholder implementation
 			if (!context.userId) {
 				throw new Error("Not authenticated");
 			}
-			
+		
 			try {
-				const user = await User.findById(context.userId);
+				const user = await User.findById(context.userId).select("-password"); // Prevent password from being returned
 				if (!user) {
 					throw new Error("User not found");
 				}
 				return user;
-			} catch (error: unknown) {
-				if (error instanceof Error) {
-					throw new Error(`Failed to fetch current user: ${error.message}`);
-				}
-				throw new Error("Failed to fetch current user: Unknown error");
+			} catch (error) {
+				throw new Error("Failed to fetch current user");
 			}
-		},
+		},		
 		async user(_: ResolverParent, { id }: UserArgs): Promise<any> {
 			try {
 				const user = await User.findById(id);
@@ -259,31 +264,81 @@ const resolvers = {
 				);
 			}
 		},
-		async createUser(_: ResolverParent, { userInput }: CreateUserArgs): Promise<any> {
+		async createUser(_: ResolverParent, { userInput }: CreateUserArgs): Promise<{ token: string; user: any }> {
 			try {
-				// Note: In a real app, you'd hash the password before saving
-				// Since password isn't in your User model, we're omitting it here
+				const existingUser = await User.findOne({ email: userInput.email });
+				if (existingUser) {
+					throw new Error("Email already exists");
+				}
+		
+				const hashedPassword = await bcrypt.hash(userInput.password, 10);
+		
 				const newUser = new User({
 					name: userInput.name,
 					email: userInput.email,
-					// Password handling would be added here in a real implementation
+					password: hashedPassword,
 				});
-				
+		
 				const savedUser = await newUser.save();
-				return savedUser;
-			} catch (error: unknown) {
-				if (error instanceof Error) {
-					// Handle duplicate email error specifically
-					if (error.message.includes('duplicate key error') && error.message.includes('email')) {
-						throw new Error('Email already exists');
-					}
-					throw new Error(`Failed to create user: ${error.message}`);
+		
+				const token = jwt.sign({ userId: savedUser.id }, process.env.JWT_SECRET!, { expiresIn: "1d" });
+		
+				// Exclude password before returning the user object
+				return {
+					token,
+					user: {
+						id: savedUser.id,
+						name: savedUser.name,
+						email: savedUser.email,
+						createdAt: savedUser.createdAt,
+					},
+				};
+			} catch (error) {
+				throw new Error(error);
+			}
+		},		
+		async login(_: ResolverParent, { email, password }: LoginArgs): Promise<{ token: string; user: any }> {
+			try {
+				const user = await User.findOne({ email });
+				if (!user) {
+					throw new Error("User not found");
 				}
-				throw new Error("Failed to create user: Unknown error");
+		
+				const isPasswordValid = await bcrypt.compare(password, user.password);
+				console.log(password);
+				if (!isPasswordValid) {
+					throw new Error("Invalid password");
+				}
+		
+				const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "1d" });
+		
+				// Exclude password before returning the user object
+				return {
+					token,
+					user: {
+						id: user.id,
+						name: user.name,
+						email: user.email,
+						createdAt: user.createdAt,
+					},
+				};
+			} catch (error) {
+				console.log(error);
+				throw new Error(error);
 			}
 		},
+
 	},
 	// Field resolvers
+		// Field Resolvers to Hide Password
+	User: {
+		id(parent: any): string {
+			return parent.id.toString();
+		},
+		createdAt(parent: any): string {
+			return parent.createdAt.toISOString();
+		},
+	},
 	Analysis: {
 		async result(parent: any): Promise<any[]> {
 			try {
@@ -355,15 +410,7 @@ const resolvers = {
 				throw new Error("Failed to fetch results: Unknown error");
 			}
 		},
-	},
-	User: {
-		id(parent: any): string {
-			return parent._id.toString();
-		},
-		createdAt(parent: any): string {
-			return parent.createdAt.toISOString();
-		}
-	},
+	}
 };
 
 export { resolvers };

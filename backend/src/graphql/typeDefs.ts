@@ -18,7 +18,7 @@ const typeDefs = gql`
 
 	type Mutation {
 		# Creates a new user
-		createUser(userInput: UserInput): User!
+		createUser(userInput: UserInput): AuthPayload!
 
 		# Creates a new analysis
 		createAnalysis(datasetInput: DatasetInput): Analysis!
@@ -28,6 +28,10 @@ const typeDefs = gql`
 
 		# Deletes an analysis by ID
 		deleteAnalysis(id: ID!): Boolean!
+
+		# Logs in a user and returns a token
+		login(email: String!, password: String!): AuthPayload!
+
 	}
 
 	type User {
@@ -35,6 +39,17 @@ const typeDefs = gql`
 		name: String!
 		email: String!
 		createdAt: String!
+		# Password is NOT included in API responses for security reasons
+	}
+
+
+	"""
+	AuthPayload - the response from a login request.
+	Includes a token for authentication.
+	"""
+	type AuthPayload {
+		token: String!
+		user: User!
 	}
 
 	"""
