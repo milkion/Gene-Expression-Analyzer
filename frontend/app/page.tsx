@@ -1,5 +1,4 @@
 "use client";
-
 import { NavigationBar } from "@/components/navigation-bar";
 import { FileDropzone } from "@/components/dropzone";
 

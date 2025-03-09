@@ -2,6 +2,7 @@ import Dataset from "../models/Dataset.js";
 import Analysis from "../models/Analysis.js";
 import Result from "../models/Result.js";
 import Gene from "../models/Gene.js";
+import User from "../models/User.js";
 import mongoose from "mongoose";
 
 // Define types for resolver parameters and context
@@ -33,6 +34,21 @@ interface UpdateAnalysisWithResultsArgs {
 
 interface CreateAnalysisResultArgs {
 	results: any; // This would be AnalysisResult input
+}
+
+// Define types for User-related arguments
+interface UserArgs {
+	id: string;
+}
+
+interface UserInput {
+	name: string;
+	email: string;
+	password: string;
+}
+
+interface CreateUserArgs {
+	userInput: UserInput;
 }
 
 // Tell Apollo server how we should fetch data associated with each type
@@ -67,6 +83,40 @@ const resolvers = {
 					throw new Error(`Failed to fetch analysis: ${error.message}`);
 				}
 				throw new Error("Failed to fetch analysis: Unknown error");
+			}
+		},
+		async me(_: ResolverParent, __: {}, context: ResolverContext): Promise<any> {
+			// This would typically check the authenticated user from context
+			// For now, returning a placeholder implementation
+			if (!context.userId) {
+				throw new Error("Not authenticated");
+			}
+			
+			try {
+				const user = await User.findById(context.userId);
+				if (!user) {
+					throw new Error("User not found");
+				}
+				return user;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to fetch current user: ${error.message}`);
+				}
+				throw new Error("Failed to fetch current user: Unknown error");
+			}
+		},
+		async user(_: ResolverParent, { id }: UserArgs): Promise<any> {
+			try {
+				const user = await User.findById(id);
+				if (!user) {
+					throw new Error(`User with ID ${id} not found`);
+				}
+				return user;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to fetch user: ${error.message}`);
+				}
+				throw new Error("Failed to fetch user: Unknown error");
 			}
 		},
 	},
@@ -209,6 +259,29 @@ const resolvers = {
 				);
 			}
 		},
+		async createUser(_: ResolverParent, { userInput }: CreateUserArgs): Promise<any> {
+			try {
+				// Note: In a real app, you'd hash the password before saving
+				// Since password isn't in your User model, we're omitting it here
+				const newUser = new User({
+					name: userInput.name,
+					email: userInput.email,
+					// Password handling would be added here in a real implementation
+				});
+				
+				const savedUser = await newUser.save();
+				return savedUser;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					// Handle duplicate email error specifically
+					if (error.message.includes('duplicate key error') && error.message.includes('email')) {
+						throw new Error('Email already exists');
+					}
+					throw new Error(`Failed to create user: ${error.message}`);
+				}
+				throw new Error("Failed to create user: Unknown error");
+			}
+		},
 	},
 	// Field resolvers
 	Analysis: {
@@ -282,6 +355,14 @@ const resolvers = {
 				throw new Error("Failed to fetch results: Unknown error");
 			}
 		},
+	},
+	User: {
+		id(parent: any): string {
+			return parent._id.toString();
+		},
+		createdAt(parent: any): string {
+			return parent.createdAt.toISOString();
+		}
 	},
 };
 

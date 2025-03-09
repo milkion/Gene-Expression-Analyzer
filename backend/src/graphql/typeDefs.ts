@@ -3,6 +3,12 @@ import { gql } from "apollo-server";
 
 const typeDefs = gql`
 	type Query {
+		# Gets the current user
+		me: User!
+
+		# Gets user by ID
+		user(id: ID!): User!
+
 		# Gets a list of analyses
 		getAnalyses: [Analysis!]!
 
@@ -11,6 +17,9 @@ const typeDefs = gql`
 	}
 
 	type Mutation {
+		# Creates a new user
+		createUser(userInput: UserInput): User!
+
 		# Creates a new analysis
 		createAnalysis(datasetInput: DatasetInput): Analysis!
 
@@ -19,7 +28,6 @@ const typeDefs = gql`
 
 		# Deletes an analysis by ID
 		deleteAnalysis(id: ID!): Boolean!
-
 	}
 
 	type User {
@@ -114,6 +122,12 @@ const typeDefs = gql`
 		description: String
 		function: String
 		pathway: String
+	}
+
+	input UserInput {
+		name: String!
+		email: String!
+		password: String!
 	}
 
 	enum AnalysisStatus {
