@@ -24,6 +24,12 @@ export function NavigationBar() {
 							<NavigationMenuItem>
 								<NavigationMenuLink>Profile</NavigationMenuLink>
 							</NavigationMenuItem>
+							<NavigationMenuItem>
+								<NavigationMenuLink  href="/register">Register</NavigationMenuLink>
+							</NavigationMenuItem>
+							<NavigationMenuItem>
+								<NavigationMenuLink  href="/login">Login</NavigationMenuLink>
+							</NavigationMenuItem>
 						</NavigationMenuList>
 					</NavigationMenu>
 				</div>
