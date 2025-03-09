@@ -13,7 +13,6 @@ dotenv.config(); // Load environment variables
 type ResolverParent = any;
 type ResolverContext = { userId?: string }; //This ensures TypeScript knows userId exists in the context.
 
-
 // Define types for GraphQL arguments
 interface AnalysisArgs {
 	id: string;
@@ -95,11 +94,15 @@ const resolvers = {
 				throw new Error("Failed to fetch analysis: Unknown error");
 			}
 		},
-		async me(_: ResolverParent, __: {}, context: ResolverContext): Promise<any> {
+		async me(
+			_: ResolverParent,
+			__: {},
+			context: ResolverContext
+		): Promise<any> {
 			if (!context.userId) {
 				throw new Error("Not authenticated");
 			}
-		
+
 			try {
 				const user = await User.findById(context.userId).select("-password"); // Prevent password from being returned
 				if (!user) {
@@ -109,7 +112,7 @@ const resolvers = {
 			} catch (error) {
 				throw new Error("Failed to fetch current user");
 			}
-		},		
+		},
 		async user(_: ResolverParent, { id }: UserArgs): Promise<any> {
 			try {
 				const user = await User.findById(id);
@@ -264,25 +267,36 @@ const resolvers = {
 				);
 			}
 		},
-		async createUser(_: ResolverParent, { userInput }: CreateUserArgs): Promise<{ token: string; user: any }> {
+		async createUser(
+			_: ResolverParent,
+			{ userInput }: CreateUserArgs
+		): Promise<{ token: string; user: any }> {
 			try {
 				const existingUser = await User.findOne({ email: userInput.email });
 				if (existingUser) {
 					throw new Error("Email already exists");
 				}
-		
+
 				const hashedPassword = await bcrypt.hash(userInput.password, 10);
-		
+
 				const newUser = new User({
 					name: userInput.name,
 					email: userInput.email,
-					password: hashedPassword,
+					password: userInput.password,
 				});
-		
+
 				const savedUser = await newUser.save();
-		
-				const token = jwt.sign({ userId: savedUser.id }, process.env.JWT_SECRET!, { expiresIn: "1d" });
-		
+
+				if (!process.env.JWT_SECRET) {
+					throw new Error("JWT_SECRET environment variable is not defined");
+				}
+
+				const token = jwt.sign(
+					{ userId: savedUser.id },
+					process.env.JWT_SECRET!,
+					{ expiresIn: "1d" }
+				);
+
 				// Exclude password before returning the user object
 				return {
 					token,
@@ -296,22 +310,27 @@ const resolvers = {
 			} catch (error) {
 				throw new Error(error);
 			}
-		},		
-		async login(_: ResolverParent, { email, password }: LoginArgs): Promise<{ token: string; user: any }> {
+		},
+		async login(
+			_: ResolverParent,
+			{ email, password }: LoginArgs
+		): Promise<{ token: string; user: any }> {
 			try {
 				const user = await User.findOne({ email });
 				if (!user) {
 					throw new Error("User not found");
 				}
-		
+
 				const isPasswordValid = await bcrypt.compare(password, user.password);
 				console.log(password);
 				if (!isPasswordValid) {
 					throw new Error("Invalid password");
 				}
-		
-				const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "1d" });
-		
+
+				const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+					expiresIn: "1d",
+				});
+
 				// Exclude password before returning the user object
 				return {
 					token,
@@ -327,10 +346,9 @@ const resolvers = {
 				throw new Error(error);
 			}
 		},
-
 	},
 	// Field resolvers
-		// Field Resolvers to Hide Password
+	// Field Resolvers to Hide Password
 	User: {
 		id(parent: any): string {
 			return parent.id.toString();
@@ -410,7 +428,7 @@ const resolvers = {
 				throw new Error("Failed to fetch results: Unknown error");
 			}
 		},
-	}
+	},
 };
 
 export { resolvers };
