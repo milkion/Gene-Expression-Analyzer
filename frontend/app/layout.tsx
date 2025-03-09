@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Mulish } from "next/font/google";
-import "./register/register.css";
 import "./globals.css";
 
 const mulish = Mulish({
