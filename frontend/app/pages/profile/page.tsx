@@ -3,7 +3,7 @@
 import { NavigationBar } from "@/components/navigation-bar";
 import { ProfileSection } from "@/components/profile-section";
 
-export function Profile() {
+export default function Profile() {
     return (
         <div>
             <NavigationBar />

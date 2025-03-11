@@ -6,7 +6,7 @@ import { Card, CardDescription } from "@/components/ui/card";
 
 export function ProfileSection() {
     let name = "Leon";
-    let password = "biogenex";
+    let email = "leonfoonghf@gmail.com";
 
     return (
         <div>
@@ -17,7 +17,7 @@ export function ProfileSection() {
             <Card>
                 <CardDescription>
                     <p>Name: {name}</p>
-                    <p>Password: {password}</p>
+                    <p>Email: {email}</p>
                 </CardDescription>
             </Card>
         </div>
