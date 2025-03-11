@@ -1,9 +1,24 @@
 # Ensure required packages are installed
-required_packages <- c("BiocManager", "GEOquery", "DESeq2", "limma", 
-                       "illuminaHumanv4.db", "dplyr", "tibble", "jsonlite", "httr")
+# Define packages
+required_packages <- c("dplyr", "tibble", "jsonlite", "httr")
+bioc_packages <- c("GEOquery", "DESeq2", "limma", "illuminaHumanv4.db")
+
+# Install BiocManager if not already installed
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager", dependencies = TRUE)
+}
+
+# Install regular CRAN packages
 for (pkg in required_packages) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     install.packages(pkg, dependencies = TRUE)
+  }
+}
+
+# Install Bioconductor packages
+for (pkg in bioc_packages) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    BiocManager::install(pkg)
   }
 }
 
@@ -94,7 +109,7 @@ write.csv(significantGenes, file = output_file, row.names = TRUE)
 
 
 #Converting Probe IDs to Genes Symbols
-BiocManager::install("illuminaHumanv4.db")
+BiocManager::install("illuminaHumanv4.db", force = TRUE)
 library(illuminaHumanv4.db)
 
 #Mapping between probe Ids and gene symbols

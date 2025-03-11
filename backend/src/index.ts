@@ -4,12 +4,11 @@ import { typeDefs } from "./graphql/typeDefs.js";
 import { resolvers } from "./graphql/resolvers.js";
 import { ResponseData } from "./graphql/resolvers.js";
 import fs from 'fs';
-import csv from "csv-parser";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
 import { updateAnalysis } from "./graphql/mutation.js";
+import { spawn } from "child_process";
+
 
 dotenv.config();
 
@@ -22,15 +21,21 @@ const server = new ApolloServer({
 });
 
 const PORT = 4000;
-import { spawn } from "child_process";
 
 function runR() {
 	return new Promise((resolve, reject) => {
+
 		const rScriptPath = "src/R/significantGenes.R";
 
+		/** USE BELOW FOR MAC */
 		console.log("Running R script at:", rScriptPath);
-
 		const rProcess = spawn("Rscript", [rScriptPath]);
+
+
+		/** USE BELOW FOR WINDOWS */
+		// const rscriptExecutable = "C:\\Program Files\\R\\R-4.4.3\\bin\\Rscript.exe";
+		// console.log("Running R script at:", rScriptPath);
+		// const rProcess = spawn(rscriptExecutable, [rScriptPath]);
 
 		let output = "";
 		let errorOutput = "";
