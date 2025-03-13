@@ -11,4 +11,6 @@ A GraphQL server implementation for handling genomic data analysis, built with A
 
 1. Clone the repository
 2. Install dependencies by running `npm install`
+
+<!-- Compile the code by running `npm run compile` -->
 3. Run the server by running `npm start`

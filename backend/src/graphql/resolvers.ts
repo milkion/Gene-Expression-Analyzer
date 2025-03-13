@@ -1,0 +1,434 @@
+import Dataset from "../models/Dataset.js";
+import Analysis from "../models/Analysis.js";
+import Result from "../models/Result.js";
+import Gene from "../models/Gene.js";
+import User from "../models/User.js";
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config(); // Load environment variables
+// Define types for resolver parameters and context
+type ResolverParent = any;
+type ResolverContext = { userId?: string }; //This ensures TypeScript knows userId exists in the context.
+
+// Define types for GraphQL arguments
+interface AnalysisArgs {
+	id: string;
+}
+
+interface DatasetInput {
+	name: string;
+	description: string;
+}
+
+interface CreateAnalysisArgs {
+	datasetInput: DatasetInput;
+}
+
+interface DeleteAnalysisArgs {
+	id: string;
+}
+
+interface UpdateAnalysisWithResultsArgs {
+	id: string;
+	results: any; // This would be AnalysisResult input
+}
+
+interface CreateAnalysisResultArgs {
+	results: any; // This would be AnalysisResult input
+}
+
+// Define types for User-related arguments
+interface UserArgs {
+	id: string;
+}
+
+interface UserInput {
+	name: string;
+	email: string;
+	password: string;
+}
+
+interface CreateUserArgs {
+	userInput: UserInput;
+}
+
+interface LoginArgs {
+	email: string;
+	password: string;
+}
+
+// Tell Apollo server how we should fetch data associated with each type
+const resolvers = {
+	Query: {
+		async getAnalyses(): Promise<any[]> {
+			try {
+				return await Analysis.find().populate("dataset").populate("results");
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to fetch analyses: ${error.message}`);
+				}
+				throw new Error("Failed to fetch analyses: Unknown error");
+			}
+		},
+		async analysis(_: ResolverParent, { id }: AnalysisArgs): Promise<any> {
+			try {
+				const analysis = await Analysis.findById(id)
+					.populate("dataset")
+					.populate({
+						path: "results",
+						populate: { path: "gene" },
+					});
+
+				if (!analysis) {
+					throw new Error(`Analysis with ID ${id} not found`);
+				}
+
+				return analysis;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to fetch analysis: ${error.message}`);
+				}
+				throw new Error("Failed to fetch analysis: Unknown error");
+			}
+		},
+		async me(
+			_: ResolverParent,
+			__: {},
+			context: ResolverContext
+		): Promise<any> {
+			if (!context.userId) {
+				throw new Error("Not authenticated");
+			}
+
+			try {
+				const user = await User.findById(context.userId).select("-password"); // Prevent password from being returned
+				if (!user) {
+					throw new Error("User not found");
+				}
+				return user;
+			} catch (error) {
+				throw new Error("Failed to fetch current user");
+			}
+		},
+		async user(_: ResolverParent, { id }: UserArgs): Promise<any> {
+			try {
+				const user = await User.findById(id);
+				if (!user) {
+					throw new Error(`User with ID ${id} not found`);
+				}
+				return user;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to fetch user: ${error.message}`);
+				}
+				throw new Error("Failed to fetch user: Unknown error");
+			}
+		},
+	},
+	Mutation: {
+		async createAnalysis(
+			_: ResolverParent,
+			{ datasetInput: { name, description } }: CreateAnalysisArgs
+		): Promise<any> {
+			try {
+				// Create a new dataset
+				const dataset = new Dataset({
+					name: name,
+					description: description,
+					uploadedAt: new Date(),
+					size: 0, // To change (or maybe remove)
+				});
+
+				const savedDataset = await dataset.save();
+
+				// Create a new analysis linked to this dataset
+				const analysis = new Analysis({
+					date: new Date(),
+					status: "FETCHING", // Initial status
+					dataset: savedDataset._id,
+					results: [],
+					visualization: null,
+				});
+
+				const savedAnalysis = await analysis.save();
+
+				// Populate the dataset field for the response
+				await savedAnalysis.populate("dataset");
+
+				return savedAnalysis;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to create analysis: ${error.message}`);
+				}
+				throw new Error("Failed to create analysis: Unknown error");
+			}
+		},
+		async deleteAnalysis(
+			_: ResolverParent,
+			{ id }: DeleteAnalysisArgs
+		): Promise<boolean> {
+			try {
+				// Find the analysis to get associated results
+				const analysis = await Analysis.findById(id);
+
+				if (!analysis) {
+					throw new Error(`Analysis with ID ${id} not found`);
+				}
+
+				// Delete associated results
+				if (analysis.results && analysis.results.length > 0) {
+					await Result.deleteMany({ _id: { $in: analysis.results } });
+				}
+
+				// Delete the analysis itself
+				const deleteResult = await Analysis.findByIdAndDelete(id);
+
+				return !!deleteResult; // Return true if deletion was successful
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to delete analysis: ${error.message}`);
+				}
+				throw new Error("Failed to delete analysis: Unknown error");
+			}
+		},
+		async updateAnalysisWithResults(
+			_: ResolverParent,
+			{ id, results }: UpdateAnalysisWithResultsArgs
+		): Promise<any> {
+			try {
+				// Find the analysis to update
+				const analysis = await Analysis.findById(id);
+
+				if (!analysis) {
+					throw new Error(`Analysis with ID ${id} not found`);
+				}
+
+				// Create results and save them
+				const resultIds = [];
+
+				if (results.results && results.results.length > 0) {
+					for (const resultData of results.results) {
+						// Create or find gene
+						let gene;
+						if (resultData.gene.id) {
+							gene = await Gene.findById(resultData.gene.id);
+							if (!gene) {
+								gene = new Gene(resultData.gene);
+								await gene.save();
+							}
+						} else {
+							gene = new Gene(resultData.gene);
+							await gene.save();
+						}
+
+						// Create result
+						const result = new Result({
+							gene: gene._id,
+							analysis: id,
+							logFC: resultData.logFC,
+							avgExpr: resultData.avgExpr,
+							tValue: resultData.tValue,
+							pValue: resultData.pValue,
+							adjustedPValue: resultData.adjustedPValue,
+							bStat: resultData.bStat,
+						});
+
+						const savedResult = await result.save();
+						resultIds.push(savedResult._id);
+					}
+				}
+
+				// Update analysis with results and status
+				analysis.results = resultIds;
+				analysis.status = "COMPLETED";
+				analysis.visualization = results.visualization || null;
+
+				const updatedAnalysis = await analysis.save();
+
+				// Populate related fields
+				await updatedAnalysis.populate("dataset");
+				await updatedAnalysis.populate({
+					path: "results",
+					populate: { path: "gene" },
+				});
+
+				return updatedAnalysis;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(
+						`Failed to update analysis with results: ${error.message}`
+					);
+				}
+				throw new Error(
+					"Failed to update analysis with results: Unknown error"
+				);
+			}
+		},
+		async createUser(
+			_: ResolverParent,
+			{ userInput }: CreateUserArgs
+		): Promise<{ token: string; user: any }> {
+			try {
+				const existingUser = await User.findOne({ email: userInput.email });
+				if (existingUser) {
+					throw new Error("Email already exists");
+				}
+
+				const hashedPassword = await bcrypt.hash(userInput.password, 10);
+
+				const newUser = new User({
+					name: userInput.name,
+					email: userInput.email,
+					password: userInput.password,
+				});
+
+				const savedUser = await newUser.save();
+
+				if (!process.env.JWT_SECRET) {
+					throw new Error("JWT_SECRET environment variable is not defined");
+				}
+
+				const token = jwt.sign(
+					{ userId: savedUser.id },
+					process.env.JWT_SECRET!,
+					{ expiresIn: "1d" }
+				);
+
+				// Exclude password before returning the user object
+				return {
+					token,
+					user: {
+						id: savedUser.id,
+						name: savedUser.name,
+						email: savedUser.email,
+						createdAt: savedUser.createdAt,
+					},
+				};
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+		async login(
+			_: ResolverParent,
+			{ email, password }: LoginArgs
+		): Promise<{ token: string; user: any }> {
+			try {
+				const user = await User.findOne({ email });
+				if (!user) {
+					throw new Error("User not found");
+				}
+
+				const isPasswordValid = await bcrypt.compare(password, user.password);
+				console.log(password);
+				if (!isPasswordValid) {
+					throw new Error("Invalid password");
+				}
+
+				const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
+					expiresIn: "1d",
+				});
+
+				// Exclude password before returning the user object
+				return {
+					token,
+					user: {
+						id: user.id,
+						name: user.name,
+						email: user.email,
+						createdAt: user.createdAt,
+					},
+				};
+			} catch (error) {
+				console.log(error);
+				throw new Error(error);
+			}
+		},
+	},
+	// Field resolvers
+	// Field Resolvers to Hide Password
+	User: {
+		id(parent: any): string {
+			return parent.id.toString();
+		},
+		createdAt(parent: any): string {
+			return parent.createdAt.toISOString();
+		},
+	},
+	Analysis: {
+		async result(parent: any): Promise<any[]> {
+			try {
+				if (parent.results.length === 0) return [];
+
+				return await Result.find({ _id: { $in: parent.results } }).populate(
+					"gene"
+				);
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to fetch results: ${error.message}`);
+				}
+				throw new Error("Failed to fetch results: Unknown error");
+			}
+		},
+		async dataset(parent: any): Promise<any> {
+			try {
+				if (parent.dataset instanceof mongoose.Types.ObjectId) {
+					return await Dataset.findById(parent.dataset);
+				}
+				return parent.dataset;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to fetch dataset: ${error.message}`);
+				}
+				throw new Error("Failed to fetch dataset: Unknown error");
+			}
+		},
+	},
+	Result: {
+		id(parent: any): string {
+			return parent._id.toString();
+		},
+		async gene(parent: any): Promise<any> {
+			try {
+				if (parent.gene instanceof mongoose.Types.ObjectId) {
+					return await Gene.findById(parent.gene);
+				}
+				return parent.gene;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to fetch gene: ${error.message}`);
+				}
+				throw new Error("Failed to fetch gene: Unknown error");
+			}
+		},
+	},
+	AnalysisResult: {
+		async results(parent: any): Promise<any[]> {
+			try {
+				if (!parent.results || parent.results.length === 0) return [];
+
+				// If the results are already populated objects, return them
+				if (
+					typeof parent.results[0] !== "string" &&
+					!(parent.results[0] instanceof mongoose.Types.ObjectId)
+				) {
+					return parent.results;
+				}
+
+				// Otherwise, fetch and populate them
+				return await Result.find({ _id: { $in: parent.results } }).populate(
+					"gene"
+				);
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to fetch results: ${error.message}`);
+				}
+				throw new Error("Failed to fetch results: Unknown error");
+			}
+		},
+	},
+};
+
+export { resolvers };
