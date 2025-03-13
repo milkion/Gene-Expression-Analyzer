@@ -1,25 +1,24 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import profileIcon from "@/public/profile-picture.svg";
-import { Card, CardDescription } from "@/components/ui/card";
 
 export function ProfileSection() {
-    let name = "Leon";
-    let email = "leonfoonghf@gmail.com";
+    const name = "Leon";
+    const email = "leonfoonghf@gmail.com";
 
     return (
-        <div>
-            <Avatar>
-                <AvatarImage src={profileIcon.src} />
-                <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            <Card>
-                <CardDescription>
-                    <p>Name: {name}</p>
-                    <p>Email: {email}</p>
-                </CardDescription>
-            </Card>
+        <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
+            <img
+                src={profileIcon}
+                alt="Profile Icon"
+                className="w-24 h-24 rounded-full border-2 border-gray-300"
+            />
+            <p className="mt-4 text-lg font-semibold text-gray-700">
+                Name: {name}
+            </p>
+            <p className="mt-4 text-lg font-semibold text-gray-700">
+                Email: {email}
+            </p>
         </div>
     );
 }
