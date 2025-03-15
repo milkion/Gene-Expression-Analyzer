@@ -2,7 +2,7 @@ import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { typeDefs } from "./graphql/typeDefs.js";
 import { resolvers } from "./graphql/resolvers.js";
-import fs from "fs";
+import fs from 'fs';
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { updateAnalysis } from "./graphql/mutation.js";
@@ -18,9 +18,13 @@ const PORT = 4000;
 function runR() {
     return new Promise((resolve, reject) => {
         const rScriptPath = "src/R/significantGenes.R";
-        const rscriptExecutable = "C:\\Program Files\\R\\R-4.4.3\\bin\\Rscript.exe";
+        /** USE BELOW FOR MAC */
         console.log("Running R script at:", rScriptPath);
-        const rProcess = spawn(rscriptExecutable, [rScriptPath]);
+        const rProcess = spawn("Rscript", [rScriptPath]);
+        /** USE BELOW FOR WINDOWS */
+        // const rscriptExecutable = "C:\\Program Files\\R\\R-4.4.3\\bin\\Rscript.exe";
+        // console.log("Running R script at:", rScriptPath);
+        // const rProcess = spawn(rscriptExecutable, [rScriptPath]);
         let output = "";
         let errorOutput = "";
         rProcess.stdout.on("data", (data) => {
@@ -72,20 +76,20 @@ mongoose
                 results: data.significantGenes.map((gene) => ({
                     gene: {
                         symbol: gene.symbol,
-                        description: `${gene.symbol} description testing`, // Placeholder description
+                        description: `${gene.symbol} description testing` // Placeholder description
                     },
                     logFC: gene.logFC,
                     avgExpr: gene.AveExpr,
                     tValue: gene.t,
                     pValue: gene.PValue,
                     adjustedPValue: gene.adjPValue,
-                    bStat: gene.B,
-                })),
+                    bStat: gene.B
+                }))
             },
             datasetInput: {
                 name: "Lego",
-                description: "Cool lego cat",
-            },
+                description: "Cool lego cat"
+            }
         };
         return formattedResults.results.results;
     })
