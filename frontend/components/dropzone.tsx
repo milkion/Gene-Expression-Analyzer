@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dropzone";
 
 import importIcon from "@/public/import.svg";
+import { SearchBar } from "./search-bar";
+import { searchGene } from "@/app/searchHandlers";
 
 export function FileDropzone() {
 	// TODO: dropzone function to be updated when in development
@@ -40,6 +42,7 @@ export function FileDropzone() {
 						<p>Drop your dataset here, or import from your local files</p>
 						<img src={importIcon.src} alt="File icon" className="my-4 h-10" />
 						<p>or search for dataset from the GEO database below</p>
+						<SearchBar searchHandler={searchGene}/>
 					</DropzoneTrigger>
 				</DropZoneArea>
 			</Dropzone>
