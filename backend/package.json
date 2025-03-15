@@ -25,7 +25,9 @@
 		"nodemon": "^3.1.9"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.9",
+		"@types/bcrypt": "^5.0.2",
+		"@types/jsonwebtoken": "^9.0.9",
+		"@types/node": "^22.13.10",
 		"typescript": "^5.7.3"
 	}
 }
