@@ -60,8 +60,23 @@ interface LoginArgs {
 	password: string;
 }
 
+interface GeneData {
+	symbol: string;
+	logFC: number;
+	AveExpr: number;
+	t: number;
+	PValue: number;
+	adjPValue: number;
+	B: number;
+	_row: string;
+}
+
+export interface ResponseData {
+	significantGenes: GeneData[];
+}
+
 // Tell Apollo server how we should fetch data associated with each type
-const resolvers = {
+export const resolvers = {
 	Query: {
 		async getAnalyses(): Promise<any[]> {
 			try {
@@ -404,31 +419,6 @@ const resolvers = {
 			}
 		},
 	},
-	AnalysisResult: {
-		async results(parent: any): Promise<any[]> {
-			try {
-				if (!parent.results || parent.results.length === 0) return [];
-
-				// If the results are already populated objects, return them
-				if (
-					typeof parent.results[0] !== "string" &&
-					!(parent.results[0] instanceof mongoose.Types.ObjectId)
-				) {
-					return parent.results;
-				}
-
-				// Otherwise, fetch and populate them
-				return await Result.find({ _id: { $in: parent.results } }).populate(
-					"gene"
-				);
-			} catch (error: unknown) {
-				if (error instanceof Error) {
-					throw new Error(`Failed to fetch results: ${error.message}`);
-				}
-				throw new Error("Failed to fetch results: Unknown error");
-			}
-		},
-	},
 };
 
-export { resolvers };
+

@@ -96,6 +96,8 @@ const typeDefs = gql`
 		pathway: String
 	}
 
+
+
 	"""
 	Dataset - the GEO dataset that we want to process, either through
 	self import or searched (through API)
@@ -135,9 +137,8 @@ const typeDefs = gql`
 	input GeneInput {
 		symbol: String!
 		description: String
-		function: String
-		pathway: String
 	}
+	
 
 	input UserInput {
 		name: String!
@@ -152,6 +153,8 @@ const typeDefs = gql`
 		COMPLETED
 		FAILED
 	}
+
+	
 `;
 
 // Mock data generation (for frontend development)
