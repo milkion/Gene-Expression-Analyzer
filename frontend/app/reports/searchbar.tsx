@@ -9,7 +9,7 @@ export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProp
     return (
         <input
             type="text"
-            placeholder="Search reports..."
+            placeholder="Search by report id..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="border p-2 w-full max-w-xs rounded-md"
