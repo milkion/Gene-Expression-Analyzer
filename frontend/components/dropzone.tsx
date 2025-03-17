@@ -26,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import importIcon from "@/public/import.svg";
 import { createAnalysis } from "../../backend/src/graphql/mutation";
 
+import { SearchBar } from "./searchbar";
+
 export function FileDropzone() {
 	const [showDialog, setShowDialog] = useState(false);
 	const [currentFile, setCurrentFile] = useState<File | null>(null);
@@ -37,7 +39,6 @@ export function FileDropzone() {
 	// TODO: dropzone function to be updated when in development
 	const dropzone = useDropzone({
 		onDropFile: async (file: File) => {
-
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 			setCurrentFile(file);
 			setShowDialog(true);
@@ -73,7 +74,6 @@ export function FileDropzone() {
 
 			// Close dialog after successful processing
 			setShowDialog(false);
-
 		} catch (err) {
 			console.error("Error creating analysis:", err);
 			setError("Failed to process file. Please try again.");
@@ -86,13 +86,18 @@ export function FileDropzone() {
 		<div className="p-8">
 			<Dropzone {...dropzone}>
 				<DropZoneArea>
-					<DropzoneTrigger className="w-full flex flex-col items-center text-center py-20 gap-4 text-lg">
+					<DropzoneTrigger className="w-full flex flex-col items-center text-center pt-20 pb-16 gap-4 text-lg">
 						<p>Drop your dataset here, or import from your local files</p>
 						<DropzoneMessage className="mt-2 text-center">
 							Supported format: txt.gz (max 10MB)
 						</DropzoneMessage>
-						<img src={importIcon.src} alt="File icon" className="my-4 h-10" />
+						<img
+							src={importIcon.src}
+							alt="File icon"
+							className="my-4 h-20 w-20"
+						/>
 						<p>or search for dataset from the GEO database below</p>
+						{/* <SearchBar /> */}
 					</DropzoneTrigger>
 				</DropZoneArea>
 			</Dropzone>

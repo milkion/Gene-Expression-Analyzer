@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { updateAnalysis } from "./graphql/mutation.js";
 import { spawn } from "child_process";
+import jwt from "jsonwebtoken";
 dotenv.config();
 const MONGODB_URI = process.env.MONGODB_URI || "";
 // Initialize Apollo Server
@@ -60,6 +61,23 @@ mongoose
     console.log("Connected to MongoDB");
     const { url } = await startStandaloneServer(server, {
         listen: { port: PORT },
+        context: async ({ req }) => {
+            // Get the token from the Authorization header
+            const auth = req.headers.authorization || '';
+            if (auth.startsWith('Bearer ')) {
+                try {
+                    const token = auth.substring(7);
+                    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                    return { userId: decoded.userId };
+                }
+                catch (err) {
+                    // Invalid token
+                    console.log("Invalid token:", err);
+                }
+            }
+            // Return empty context if no valid auth
+            return {};
+        },
     });
     console.log(`🚀 Server ready at ${url}`);
     const significantGenes = await runR()
