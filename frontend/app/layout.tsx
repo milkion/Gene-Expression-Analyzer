@@ -14,6 +14,11 @@ const mulish = Mulish({
 const client = new ApolloClient({
 	uri: "http://localhost:4000/graphql", // ✅ Update with your backend GraphQL URL
 	cache: new InMemoryCache(),
+	headers: {
+		authorization: localStorage.getItem("token")
+			? `Bearer ${localStorage.getItem("token")}`
+			: "",
+	},
 });
 
 export default function RootLayout({
@@ -24,7 +29,9 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body className={`${mulish.variable} antialiased`}>
-				<ApolloProvider client={client}> {/* ✅ Wrap children with ApolloProvider */}
+				<ApolloProvider client={client}>
+					{" "}
+					{/* ✅ Wrap children with ApolloProvider */}
 					{children}
 				</ApolloProvider>
 			</body>

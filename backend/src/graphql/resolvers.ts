@@ -21,6 +21,7 @@ interface AnalysisArgs {
 interface DatasetInput {
 	name: string;
 	description: string;
+	size: number;
 }
 
 interface CreateAnalysisArgs {
@@ -146,7 +147,7 @@ export const resolvers = {
 	Mutation: {
 		async createAnalysis(
 			_: ResolverParent,
-			{ datasetInput: { name, description } }: CreateAnalysisArgs
+			{ datasetInput: { name, description, size } }: CreateAnalysisArgs
 		): Promise<any> {
 			try {
 				// Create a new dataset
@@ -154,7 +155,7 @@ export const resolvers = {
 					name: name,
 					description: description,
 					uploadedAt: new Date(),
-					size: 0, // To change (or maybe remove)
+					size: size,
 				});
 
 				const savedDataset = await dataset.save();

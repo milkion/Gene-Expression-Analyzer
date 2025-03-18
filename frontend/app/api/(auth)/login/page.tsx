@@ -30,7 +30,7 @@ export default function LoginPage() {
 			// Store token in localStorage
 			localStorage.setItem("token", data.login.token);
 			// Redirect to dashboard
-			router.push("/dashboard");
+			router.push("/");
 		},
 		onError: (err) => {
 			setError(err.message);

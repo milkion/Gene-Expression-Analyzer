@@ -31,7 +31,6 @@ const typeDefs = gql`
 
 		# Logs in a user and returns a token
 		login(email: String!, password: String!): AuthPayload!
-
 	}
 
 	type User {
@@ -41,7 +40,6 @@ const typeDefs = gql`
 		createdAt: String!
 		# Password is NOT included in API responses for security reasons
 	}
-
 
 	"""
 	AuthPayload - the response from a login request.
@@ -98,8 +96,6 @@ const typeDefs = gql`
 		pathway: String
 	}
 
-
-
 	"""
 	Dataset - the GEO dataset that we want to process, either through
 	self import or searched (through API)
@@ -109,7 +105,7 @@ const typeDefs = gql`
 		name: String
 		description: String
 		uploadedAt: String!
-		size: Int!
+		size: Float!
 	}
 
 	"""
@@ -119,6 +115,7 @@ const typeDefs = gql`
 	input DatasetInput {
 		name: String!
 		description: String
+		size: Float!
 	}
 
 	input AnalysisResultInput {
@@ -140,7 +137,6 @@ const typeDefs = gql`
 		symbol: String!
 		description: String
 	}
-	
 
 	input UserInput {
 		name: String!
@@ -155,8 +151,6 @@ const typeDefs = gql`
 		COMPLETED
 		FAILED
 	}
-
-	
 `;
 
 // Mock data generation (for frontend development)

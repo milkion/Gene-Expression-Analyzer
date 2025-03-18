@@ -13,10 +13,7 @@ export function NavigationBar() {
 	return (
 		<div>
 			<div className="flex flex-row justify-between items-center max-w mx-auto px-20 py-6">
-				<Link href="/" passHref>
-					<h2 className="font-medium text-3xl cursor-pointer">BioGeneX</h2>
-				</Link>
-
+				<a href="/" className="font-medium text-3xl hover:cursor-pointer">BioGeneX</a>
 
 				<div className="ml-auto list-none">
 					<NavigationMenu>
@@ -27,7 +24,12 @@ export function NavigationBar() {
 								</Link>
 							</NavigationMenuItem>
 							<NavigationMenuItem>
-								<NavigationMenuLink>Profile</NavigationMenuLink>
+								<NavigationMenuLink
+									href="/profile"
+									className="cursor-pointer hover:font-semibold"
+								>
+									Profile
+								</NavigationMenuLink>
 							</NavigationMenuItem>
 
 						</NavigationMenuList>
