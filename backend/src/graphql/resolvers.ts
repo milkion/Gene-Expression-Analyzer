@@ -110,17 +110,13 @@ export const resolvers = {
 				throw new Error("Failed to fetch analysis: Unknown error");
 			}
 		},
-		async me(
-			_: ResolverParent,
-			__: {},
-			context: ResolverContext
-		): Promise<any> {
+		async me(_: ResolverParent, __: {}, context: ResolverContext): Promise<any> {
 			if (!context.userId) {
 				throw new Error("Not authenticated");
 			}
-
+	
 			try {
-				const user = await User.findById(context.userId).select("-password"); // Prevent password from being returned
+				const user = await User.findById(context.userId).select("-password"); // Hide password
 				if (!user) {
 					throw new Error("User not found");
 				}
@@ -129,7 +125,11 @@ export const resolvers = {
 				throw new Error("Failed to fetch current user");
 			}
 		},
-		async user(_: ResolverParent, { id }: UserArgs): Promise<any> {
+		async user(_: ResolverParent, { id }: UserArgs, context: ResolverContext): Promise<any> {
+			if (!context.userId) {
+				throw new Error("Not authenticated");
+			}
+	
 			try {
 				const user = await User.findById(id);
 				if (!user) {
@@ -292,28 +292,27 @@ export const resolvers = {
 				if (existingUser) {
 					throw new Error("Email already exists");
 				}
-
+	
 				const hashedPassword = await bcrypt.hash(userInput.password, 10);
-
+	
 				const newUser = new User({
 					name: userInput.name,
 					email: userInput.email,
-					password: userInput.password,
+					password: hashedPassword, // Fixed: Use hashed password
 				});
-
+	
 				const savedUser = await newUser.save();
-
+	
 				if (!process.env.JWT_SECRET) {
 					throw new Error("JWT_SECRET environment variable is not defined");
 				}
-
+	
 				const token = jwt.sign(
 					{ userId: savedUser.id },
 					process.env.JWT_SECRET!,
 					{ expiresIn: "1d" }
 				);
-
-				// Exclude password before returning the user object
+	
 				return {
 					token,
 					user: {
@@ -324,7 +323,7 @@ export const resolvers = {
 					},
 				};
 			} catch (error) {
-				throw new Error(error);
+				throw new Error(`Failed to create user: ${error instanceof Error ? error.message : "Unknown error"}`);
 			}
 		},
 		async login(
@@ -336,18 +335,16 @@ export const resolvers = {
 				if (!user) {
 					throw new Error("User not found");
 				}
-
+	
 				const isPasswordValid = await bcrypt.compare(password, user.password);
-				console.log(password);
 				if (!isPasswordValid) {
 					throw new Error("Invalid password");
 				}
-
+	
 				const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
 					expiresIn: "1d",
 				});
-
-				// Exclude password before returning the user object
+	
 				return {
 					token,
 					user: {
@@ -358,8 +355,7 @@ export const resolvers = {
 					},
 				};
 			} catch (error) {
-				console.log(error);
-				throw new Error(error);
+				throw new Error(`Failed to log in: ${error instanceof Error ? error.message : "Unknown error"}`);
 			}
 		},
 	},

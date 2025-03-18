@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { updateAnalysis } from "./graphql/mutation.js";
 import { spawn } from "child_process";
-import jwt from "jsonwebtoken";
+import { authenticateUser } from "./models/middleware/authMiddleware.js";
 dotenv.config();
 const MONGODB_URI = process.env.MONGODB_URI || "";
 // Initialize Apollo Server
@@ -20,12 +20,12 @@ function runR() {
     return new Promise((resolve, reject) => {
         const rScriptPath = "src/R/significantGenes.R";
         /** USE BELOW FOR MAC */
-        console.log("Running R script at:", rScriptPath);
-        const rProcess = spawn("Rscript", [rScriptPath]);
-        /** USE BELOW FOR WINDOWS */
-        // const rscriptExecutable = "C:\\Program Files\\R\\R-4.4.3\\bin\\Rscript.exe";
         // console.log("Running R script at:", rScriptPath);
-        // const rProcess = spawn(rscriptExecutable, [rScriptPath]);
+        // const rProcess = spawn("Rscript", [rScriptPath]);
+        /** USE BELOW FOR WINDOWS */
+        const rscriptExecutable = "C:\\Program Files\\R\\R-4.4.1\\bin\\Rscript.exe";
+        console.log("Running R script at:", rScriptPath);
+        const rProcess = spawn(rscriptExecutable, [rScriptPath]);
         let output = "";
         let errorOutput = "";
         rProcess.stdout.on("data", (data) => {
@@ -62,21 +62,14 @@ mongoose
     const { url } = await startStandaloneServer(server, {
         listen: { port: PORT },
         context: async ({ req }) => {
-            // Get the token from the Authorization header
-            const auth = req.headers.authorization || '';
-            if (auth.startsWith('Bearer ')) {
-                try {
-                    const token = auth.substring(7);
-                    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                    return { userId: decoded.userId };
-                }
-                catch (err) {
-                    // Invalid token
-                    console.log("Invalid token:", err);
-                }
+            try {
+                const authContext = authenticateUser(req); // ✅ Use authentication middleware
+                return authContext;
             }
-            // Return empty context if no valid auth
-            return {};
+            catch (err) {
+                console.error("Authentication error:", err);
+                return {}; // Return empty context on auth failure
+            }
         },
     });
     console.log(`🚀 Server ready at ${url}`);
