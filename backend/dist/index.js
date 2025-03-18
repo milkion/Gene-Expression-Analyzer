@@ -89,7 +89,7 @@ mongoose
         }
         // Transform significantGenes into the new format
         const formattedResults = {
-            updateAnalysisWithResultsId: "67c9c0dd12ca8bb8c2ec90a1", // Example ID
+            updateAnalysisWithResultsId: "67d5cfbe54276c3346158c43", // Example ID
             results: {
                 results: data.significantGenes.map((gene) => ({
                     gene: {
@@ -115,7 +115,7 @@ mongoose
     if (significantGenes) {
         console.log("Formatted Data: ", significantGenes);
         const updatePayload = {
-            analysisId: "67c9c0dd12ca8bb8c2ec90a1", // Example ID, replace as needed
+            analysisId: "67d5cfbe54276c3346158c43", // Example ID, replace as needed
             results: { results: significantGenes }, // Use results array here
         };
         // Call the function directly in Node.js

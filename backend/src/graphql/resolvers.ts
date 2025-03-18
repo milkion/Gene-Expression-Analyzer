@@ -374,13 +374,16 @@ export const resolvers = {
 		},
 	},
 	Analysis: {
-		async result(parent: any): Promise<any[]> {
+		async result(parent: any): Promise<any> {
 			try {
-				if (parent.results.length === 0) return [];
+				if (!parent.results || parent.results.length === 0) {
+					return { results: [] }; // Return empty array instead of null
+				}
 
-				return await Result.find({ _id: { $in: parent.results } }).populate(
-					"gene"
-				);
+				const results = await Result.find({
+					_id: { $in: parent.results },
+				}).populate("gene");
+				return { results };
 			} catch (error: unknown) {
 				if (error instanceof Error) {
 					throw new Error(`Failed to fetch results: ${error.message}`);
@@ -421,5 +424,3 @@ export const resolvers = {
 		},
 	},
 };
-
-
