@@ -84,8 +84,8 @@ export default function ReportsPage() {
 								let bgColor = "bg-gray-200";
 								if (report.status === "COMPLETED") bgColor = "bg-green-200";
 								else if (report.status === "FAILED") bgColor = "bg-red-200";
-								else if (report.status === "FETCHING") bgColor = "bg-amber-200";
-
+								else if (report.status === "ANALYZING")
+									bgColor = "bg-amber-200";
 								return (
 									<div
 										key={report.id}

@@ -11,7 +11,7 @@ const analysisSchema = new Schema(
 			type: String,
 			required: true,
 			enum: ["FETCHING", "PARSING", "ANALYZING", "COMPLETED", "FAILED"],
-			default: "FETCHING",
+			default: "ANALYZING",
 		},
 		dataset: {
 			type: Schema.Types.ObjectId,

@@ -163,7 +163,7 @@ export const resolvers = {
 				// Create a new analysis linked to this dataset
 				const analysis = new Analysis({
 					date: new Date(),
-					status: "FETCHING", // Initial status
+					status: "ANALYZING", // Initial status
 					dataset: savedDataset._id,
 					results: [],
 					visualization: null,
