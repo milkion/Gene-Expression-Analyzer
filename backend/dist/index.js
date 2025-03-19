@@ -1,9 +1,10 @@
 import { ApolloServer } from "@apollo/server";
 import { typeDefs } from "./graphql/typeDefs.js";
 import { resolvers } from "./graphql/resolvers.js";
+import fs from "fs";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import jwt from "jsonwebtoken";
+import { authenticateUser } from "./models/middleware/authMiddleware.js";
 import express from "express";
 import cors from "cors";
 import { expressMiddleware } from "@apollo/server/express4";
@@ -32,21 +33,14 @@ async function startServer() {
     // Set up GraphQL endpoint
     app.use('/graphql', expressMiddleware(server, {
         context: async ({ req }) => {
-            // Get the token from the Authorization header
-            const auth = req.headers.authorization || '';
-            if (auth.startsWith('Bearer ')) {
-                try {
-                    const token = auth.substring(7);
-                    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                    return { userId: decoded.userId };
-                }
-                catch (err) {
-                    // Invalid token
-                    console.log("Invalid token:", err);
-                }
+            try {
+                const authContext = authenticateUser(req); // ✅ Use authentication middleware
+                return authContext;
             }
-            // Return empty context if no valid auth
-            return {};
+            catch (err) {
+                console.error("Authentication error:", err);
+                return {}; // Return empty context on auth failure
+            }
         },
     }));
     // Set up API endpoints

@@ -4,10 +4,10 @@ import { useState } from "react";
 import { gql, useMutation } from "@apollo/client";
 import { useRouter } from "next/navigation"; // ✅ Correct import
 
-// Define the GraphQL Mutation for Login
-const LOGIN_MUTATION = gql`
-	mutation Login($email: String!, $password: String!) {
-		login(email: $email, password: $password) {
+// Define the GraphQL Mutation for Register
+const CREATE_USER_MUTATION = gql`
+	mutation CreateUser($userInput: UserInput!) {
+		createUser(userInput: $userInput) {
 			token
 			user {
 				id
@@ -18,17 +18,18 @@ const LOGIN_MUTATION = gql`
 	}
 `;
 
-export default function LoginPage() {
+export default function RegisterPage() {
 	const router = useRouter();
+	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 
 	// Apollo Mutation Hook
-	const [login, { loading }] = useMutation(LOGIN_MUTATION, {
+	const [createUser, { loading }] = useMutation(CREATE_USER_MUTATION, {
 		onCompleted: (data) => {
 			// Store token in localStorage
-			localStorage.setItem("token", data.login.token);
+			localStorage.setItem("token", data.createUser.token);
 			// Redirect to dashboard
 			router.push("/");
 		},
@@ -41,13 +42,15 @@ export default function LoginPage() {
 		e.preventDefault();
 		setError(""); // Clear previous errors
 
-		if (!email || !password) {
-			setError("Both fields are required!");
+		if (!name || !email || !password) {
+			setError("All fields are required!");
 			return;
 		}
 
-		await login({
-			variables: { email, password },
+		await createUser({
+			variables: {
+				userInput: { name, email, password },
+			},
 		});
 	};
 
@@ -58,21 +61,47 @@ export default function LoginPage() {
 				<h2 className="font-medium text-3xl">BioGeneX</h2>
 			</div>
 
-			{/* Login Page Container */}
+			{/* Register Page Container */}
 			<div className="flex items-center justify-center h-screen">
 				<div className="text-center">
 					{/* Bigger Avatar Logo */}
 					<div className="flex justify-center mb-5">
-						<img src="/avatar.svg" alt="User Avatar" className="w-32 h-32 object-contain" />
+						<img
+							src="/avatar.svg"
+							alt="User Avatar"
+							className="w-32 h-32 object-contain"
+						/>
 					</div>
 
 					<form onSubmit={handleSubmit}>
 						{/* Display Error Message */}
 						{error && <p className="text-red-500">{error}</p>}
 
+						{/* Name Input */}
+						<div className="flex items-center w-80 h-12 rounded-full border bg-gray-100 px-3 py-1 mb-4">
+							<img
+								src="/name-icon.svg"
+								alt="Name Icon"
+								className="w-5 h-5 ml-1"
+							/>
+							<input
+								type="text"
+								name="name"
+								value={name}
+								onChange={(e) => setName(e.target.value)}
+								required
+								className="flex-1 border-none bg-transparent outline-none text-base pl-2"
+								placeholder="Name"
+							/>
+						</div>
+
 						{/* Email Input */}
 						<div className="flex items-center w-80 h-12 rounded-full border bg-gray-100 px-3 py-1 mb-4">
-							<img src="/email-icon.svg" alt="Email Icon" className="w-5 h-5 ml-1" />
+							<img
+								src="/email-icon.svg"
+								alt="Email Icon"
+								className="w-5 h-5 ml-1"
+							/>
 							<input
 								type="email"
 								name="email"
@@ -86,7 +115,11 @@ export default function LoginPage() {
 
 						{/* Password Input */}
 						<div className="flex items-center w-80 h-12 rounded-full border bg-gray-100 px-3 py-1 mb-4">
-							<img src="/lock-icon.svg" alt="Password Icon" className="w-5 h-5 ml-1" />
+							<img
+								src="/lock-icon.svg"
+								alt="Password Icon"
+								className="w-5 h-5 ml-1"
+							/>
 							<input
 								type="password"
 								name="password"
@@ -98,25 +131,27 @@ export default function LoginPage() {
 							/>
 						</div>
 
-						{/* Login Button (with hover effect) */}
+						{/* Register Button (with hover effect) */}
 						<div className="w-80 h-12 rounded-full bg-gray-500 flex items-center justify-center cursor-pointer mb-4 transition-all transform hover:scale-110">
 							<button
 								type="submit"
 								className="border-none bg-transparent text-white text-base cursor-pointer w-full h-full rounded-full"
 								disabled={loading}
 							>
-								{loading ? "Logging in..." : "Login"}
+								{loading ? "Registering..." : "Register"}
 							</button>
 						</div>
 
-						{/* Register Redirect Button */}
-						<p className="text-gray-600 text-sm mt-2">Don't have an account?</p>
+						{/* Login Redirect Button */}
+						<p className="text-gray-600 text-sm mt-2">
+							Already have an account?
+						</p>
 						<button
 							type="button"
-							onClick={() => router.push("/api/register")} // ✅ Redirect to Register Page
+							onClick={() => router.push("/login")} // ✅ Redirect to Login Page
 							className="w-80 h-12 mt-2 rounded-full border border-gray-500 text-gray-500 bg-transparent hover:bg-gray-500 hover:text-white transition-all"
 						>
-							Register
+							Login
 						</button>
 					</form>
 				</div>

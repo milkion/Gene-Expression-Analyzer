@@ -5,7 +5,7 @@ import profileIcon from "@/public/profile-icon.svg";
 import Image from "next/image";
 import { gql, useQuery } from "@apollo/client";
 import { useEffect, useState } from "react";
-
+import  Protected  from "@/components/Protected"; 
 // Define the GraphQL Query to fetch current user
 const ME_QUERY = gql`
 	query GetCurrentUser {
@@ -28,6 +28,7 @@ export default function Profile() {
 	}, []);
 
 	return (
+		<Protected> 
 		<div>
 			<NavigationBar />
 			<div className="mt-6 mb-2 ml-16">
@@ -67,5 +68,6 @@ export default function Profile() {
 				</div>
 			</div>
 		</div>
+		</Protected> 
 	);
 }
