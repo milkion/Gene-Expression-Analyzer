@@ -3,7 +3,7 @@ import { startStandaloneServer } from "@apollo/server/standalone";
 import { typeDefs } from "./graphql/typeDefs.js";
 import { resolvers } from "./graphql/resolvers.js";
 import { ResponseData } from "./graphql/resolvers.js";
-import fs from 'fs';
+import fs from "fs";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { updateAnalysis } from "./graphql/mutation.js";
@@ -24,37 +24,38 @@ const PORT = 4000;
 
 function runR() {
 	return new Promise((resolve, reject) => {
-
 		const rScriptPath = "src/R/significantGenes.R";
 
 		/** USE BELOW FOR MAC */
-		// console.log("Running R script at:", rScriptPath);
-		// const rProcess = spawn("Rscript", [rScriptPath]);
-
+		console.log("Running R script at:", rScriptPath);
+		const rProcess = spawn("Rscript", [rScriptPath]);
 
 		/** USE BELOW FOR WINDOWS */
-		const rscriptExecutable = "C:\\Program Files\\R\\R-4.4.1\\bin\\Rscript.exe";
-		console.log("Running R script at:", rScriptPath);
-		const rProcess = spawn(rscriptExecutable, [rScriptPath]);
+		// const rscriptExecutable = "C:\\Program Files\\R\\R-4.4.1\\bin\\Rscript.exe";
+		// console.log("Running R script at:", rScriptPath);
+		// const rProcess = spawn(rscriptExecutable, [rScriptPath]);
 
 		let output = "";
 		let errorOutput = "";
 
 		rProcess.stdout.on("data", (data) => {
 			output += data.toString();
-			console.log("R Output:", data.toString());  // ✅ Log R script output in real-time
+			console.log("R Output:", data.toString()); // ✅ Log R script output in real-time
 		});
 
 		rProcess.stderr.on("data", (data) => {
 			errorOutput += data.toString();
-			console.error("R Error:", data.toString());  // ✅ Log R script errors in real-time
+			console.error("R Error:", data.toString()); // ✅ Log R script errors in real-time
 		});
 
 		rProcess.on("close", (code) => {
 			console.log(`R script exited with code ${code}`);
 			if (code === 0) {
 				try {
-					const jsonData = fs.readFileSync("public/significantGenes.json", "utf8");
+					const jsonData = fs.readFileSync(
+						"public/significantGenes.json",
+						"utf8"
+					);
 					resolve(JSON.parse(jsonData));
 				} catch (err) {
 					console.error("Error reading JSON output:", err);
@@ -68,7 +69,6 @@ function runR() {
 	});
 }
 
-
 mongoose
 	.connect(MONGODB_URI)
 	.then(async () => {
@@ -77,7 +77,7 @@ mongoose
 			listen: { port: PORT },
 			context: async ({ req }) => {
 				try {
-					const authContext = authenticateUser(req); // ✅ Use authentication middleware
+					const authContext = authenticateUser(req as any); // ✅ Use authentication middleware
 					return authContext;
 				} catch (err) {
 					console.error("Authentication error:", err);
@@ -103,22 +103,22 @@ mongoose
 						results: data.significantGenes.map((gene) => ({
 							gene: {
 								symbol: gene.symbol,
-								description: `${gene.symbol} description testing` // Placeholder description
+								description: `${gene.symbol} description testing`, // Placeholder description
 							},
 							logFC: gene.logFC,
 							avgExpr: gene.AveExpr,
 							tValue: gene.t,
 							pValue: gene.PValue,
 							adjustedPValue: gene.adjPValue,
-							bStat: gene.B
-						}))
+							bStat: gene.B,
+						})),
 					},
 					datasetInput: {
 						name: "Lego",
-						description: "Cool lego cat"
-					}
+						description: "Cool lego cat",
+					},
 				};
-				return formattedResults.results.results
+				return formattedResults.results.results;
 			})
 			.catch((err) => console.error("Error running R script:", err));
 
@@ -131,13 +131,8 @@ mongoose
 			};
 			// Call the function directly in Node.js
 			await updateAnalysis(updatePayload.analysisId, updatePayload.results);
-
 		}
-
 	})
 	.catch((error) => {
 		console.error("Error connecting to MongoDB:", error);
 	});
-
-
-
