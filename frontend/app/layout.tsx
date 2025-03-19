@@ -23,26 +23,28 @@ export default function RootLayout({
 		const token = localStorage.getItem("token");
 		setIsAuthenticated(true);
 
-			const apolloClient = new ApolloClient({
-				uri: "http://localhost:4000/graphql",
-				cache: new InMemoryCache(),
-				headers: {
-					authorization: `Bearer ${token}`,
-				},
-			});
-			setClient(apolloClient);
-
+		const apolloClient = new ApolloClient({
+			uri: "http://localhost:4000/graphql",
+			cache: new InMemoryCache(),
+			headers: {
+				authorization: `Bearer ${token}`,
+			},
+		});
+		setClient(apolloClient);
 	}, [router]);
-
-	// Prevent rendering protected content until authentication check is done
-	if (!isAuthenticated || !client) return null;
 
 	return (
 		<html lang="en"> 
 			<body className={`${mulish.variable} antialiased`}>
-				<ApolloProvider client={client}>
-					{children}
-				</ApolloProvider>
+				{client ? (
+					<ApolloProvider client={client}>
+						{children}
+					</ApolloProvider>
+				) : (
+					<div className="h-screen flex items-center justify-center">
+						Loading...
+					</div>
+				)}
 			</body>
 		</html>
 	);
