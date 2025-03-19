@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import importIcon from "@/public/import.svg";
 import { createAnalysis } from "../../backend/src/graphql/mutation";
 
-import { SearchBar } from "./searchbar";
+
 
 export function FileDropzone() {
 	const [showDialog, setShowDialog] = useState(false);
@@ -72,6 +72,31 @@ export function FileDropzone() {
 			const result = await createAnalysis(datasetInput);
 			console.log("Analysis created:", result);
 
+			// Trigger R script processing with the analysis ID
+			if (result && result.id) {
+				try {
+					// Updated to use the correct backend URL - make sure this matches your backend server
+					const response = await fetch('http://localhost:4000/api/process-analysis', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({ analysisId: result.id }),
+					});
+					
+					if (!response.ok) {
+						const errorData = await response.json();
+						throw new Error(errorData.error || 'Failed to process analysis');
+					}
+					
+					console.log('Analysis processing started');
+				} catch (processError) {
+					console.error("Error processing analysis:", processError);
+					setError("File uploaded but analysis processing failed: " + 
+							 (processError instanceof Error ? processError.message : String(processError)));
+				}
+			}
+
 			// Close dialog after successful processing
 			setShowDialog(false);
 		} catch (err) {
@@ -114,6 +139,7 @@ export function FileDropzone() {
 								<p>
 									<strong>File Name:</strong>{" "}
 									<input
+										ref={fileNameRef}
 										defaultValue={currentFile.name}
 										className="w-full border rounded-md p-2"
 									/>
@@ -121,6 +147,7 @@ export function FileDropzone() {
 								<p>
 									<strong>File Description:</strong>{" "}
 									<input
+										ref={descriptionRef}
 										className="w-full border rounded-md p-2"
 										placeholder="Optional description"
 									/>

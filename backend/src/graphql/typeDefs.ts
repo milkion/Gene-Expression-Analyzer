@@ -61,6 +61,8 @@ const typeDefs = gql`
 		status: AnalysisStatus!
 		dataset: Dataset!
 		result: AnalysisResult
+		createdAt: String!
+		updatedAt: String!
 	}
 
 	"""

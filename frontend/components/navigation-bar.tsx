@@ -6,7 +6,7 @@ import {
 	NavigationMenuLink,
 	NavigationMenuList,
 } from "@/components/ui/navigation-menu";
-
+import Link from 'next/link';
 import { Separator } from "@/components/ui/separator";
 
 export function NavigationBar() {
@@ -19,7 +19,9 @@ export function NavigationBar() {
 					<NavigationMenu>
 						<NavigationMenuList className="flex gap-8 text-xl font-medium">
 							<NavigationMenuItem>
-								<NavigationMenuLink>Reports</NavigationMenuLink>
+								<Link href="/reports" passHref>
+									<NavigationMenuLink>Reports</NavigationMenuLink>
+								</Link>
 							</NavigationMenuItem>
 							<NavigationMenuItem>
 								<NavigationMenuLink
@@ -29,6 +31,7 @@ export function NavigationBar() {
 									Profile
 								</NavigationMenuLink>
 							</NavigationMenuItem>
+
 						</NavigationMenuList>
 					</NavigationMenu>
 				</div>
