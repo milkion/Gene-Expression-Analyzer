@@ -34,7 +34,10 @@ interface DeleteAnalysisArgs {
 
 interface UpdateAnalysisWithResultsArgs {
 	id: string;
-	results: any; // This would be AnalysisResult input
+	results: {
+		results: any[];
+		visualization?: string;
+	};
 }
 
 interface CreateAnalysisResultArgs {
@@ -110,11 +113,15 @@ export const resolvers = {
 				throw new Error("Failed to fetch analysis: Unknown error");
 			}
 		},
-		async me(_: ResolverParent, __: {}, context: ResolverContext): Promise<any> {
+		async me(
+			_: ResolverParent,
+			__: {},
+			context: ResolverContext
+		): Promise<any> {
 			if (!context.userId) {
 				throw new Error("Not authenticated");
 			}
-	
+
 			try {
 				const user = await User.findById(context.userId).select("-password"); // Hide password
 				if (!user) {
@@ -125,11 +132,15 @@ export const resolvers = {
 				throw new Error("Failed to fetch current user");
 			}
 		},
-		async user(_: ResolverParent, { id }: UserArgs, context: ResolverContext): Promise<any> {
+		async user(
+			_: ResolverParent,
+			{ id }: UserArgs,
+			context: ResolverContext
+		): Promise<any> {
 			if (!context.userId) {
 				throw new Error("Not authenticated");
 			}
-	
+
 			try {
 				const user = await User.findById(id);
 				if (!user) {
@@ -260,7 +271,9 @@ export const resolvers = {
 				// Update analysis with results and status
 				analysis.results = resultIds;
 				analysis.status = "COMPLETED";
-				analysis.visualization = results.visualization || null;
+
+				// Explicitly handle visualization data (ensuring it accepts a string)
+				analysis.visualization = results.visualization;
 
 				const updatedAnalysis = await analysis.save();
 
@@ -292,27 +305,27 @@ export const resolvers = {
 				if (existingUser) {
 					throw new Error("Email already exists");
 				}
-	
+
 				const hashedPassword = await bcrypt.hash(userInput.password, 10);
-	
+
 				const newUser = new User({
 					name: userInput.name,
 					email: userInput.email,
 					password: hashedPassword, // Fixed: Use hashed password
 				});
-	
+
 				const savedUser = await newUser.save();
-	
+
 				if (!process.env.JWT_SECRET) {
 					throw new Error("JWT_SECRET environment variable is not defined");
 				}
-	
+
 				const token = jwt.sign(
 					{ userId: savedUser.id },
 					process.env.JWT_SECRET!,
 					{ expiresIn: "1d" }
 				);
-	
+
 				return {
 					token,
 					user: {
@@ -323,7 +336,11 @@ export const resolvers = {
 					},
 				};
 			} catch (error) {
-				throw new Error(`Failed to create user: ${error instanceof Error ? error.message : "Unknown error"}`);
+				throw new Error(
+					`Failed to create user: ${
+						error instanceof Error ? error.message : "Unknown error"
+					}`
+				);
 			}
 		},
 		async login(
@@ -335,16 +352,16 @@ export const resolvers = {
 				if (!user) {
 					throw new Error("User not found");
 				}
-	
+
 				const isPasswordValid = await bcrypt.compare(password, user.password);
 				if (!isPasswordValid) {
 					throw new Error("Invalid password");
 				}
-	
+
 				const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
 					expiresIn: "1d",
 				});
-	
+
 				return {
 					token,
 					user: {
@@ -355,7 +372,11 @@ export const resolvers = {
 					},
 				};
 			} catch (error) {
-				throw new Error(`Failed to log in: ${error instanceof Error ? error.message : "Unknown error"}`);
+				throw new Error(
+					`Failed to log in: ${
+						error instanceof Error ? error.message : "Unknown error"
+					}`
+				);
 			}
 		},
 	},
@@ -373,13 +394,20 @@ export const resolvers = {
 		async result(parent: any): Promise<any> {
 			try {
 				if (!parent.results || parent.results.length === 0) {
-					return { results: [] }; // Return empty array instead of null
+					return {
+						results: [],
+						visualization: parent.visualization,
+					};
 				}
 
 				const results = await Result.find({
 					_id: { $in: parent.results },
 				}).populate("gene");
-				return { results };
+
+				return {
+					results,
+					visualization: parent.visualization,
+				};
 			} catch (error: unknown) {
 				if (error instanceof Error) {
 					throw new Error(`Failed to fetch results: ${error.message}`);

@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from "fs";
 import { spawn } from "child_process";
 import { ResponseData } from "../graphql/resolvers.js";
 import { updateAnalysis } from "../graphql/mutation.js";
@@ -33,11 +33,16 @@ export function runR(analysisId) {
 			console.log(`R script exited with code ${code}`);
 			if (code === 0) {
 				try {
-					const jsonData = fs.readFileSync("public/significantGenes.json", "utf8");
+					const jsonData = fs.readFileSync(
+						"public/significantGenes.json",
+						"utf8"
+					);
 					const data = JSON.parse(jsonData);
-					
+
 					if (!data.significantGenes || !Array.isArray(data.significantGenes)) {
-						console.error("Error: significantGenes is missing or not an array.");
+						console.error(
+							"Error: significantGenes is missing or not an array."
+						);
 						reject(new Error("Invalid data format from R script"));
 						return;
 					}
@@ -46,21 +51,24 @@ export function runR(analysisId) {
 					const significantGenes = data.significantGenes.map((gene) => ({
 						gene: {
 							symbol: gene.symbol,
-							description: `${gene.symbol} description testing` // Placeholder description
+							description: `${gene.symbol} description testing`, // Placeholder description
 						},
 						logFC: gene.logFC,
 						avgExpr: gene.AveExpr,
 						tValue: gene.t,
 						pValue: gene.PValue,
 						adjustedPValue: gene.adjPValue,
-						bStat: gene.B
+						bStat: gene.B,
 					}));
 
 					// Update the analysis with the results
 					const updatePayload = {
-						results: { results: significantGenes }
+						results: {
+							results: significantGenes,
+							visualization: "backend/src/image.png",
+						},
 					};
-					
+
 					await updateAnalysis(analysisId, updatePayload.results);
 					resolve(significantGenes);
 				} catch (err) {
