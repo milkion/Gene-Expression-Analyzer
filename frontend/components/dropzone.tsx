@@ -49,12 +49,39 @@ export function FileDropzone() {
 		},
 		validation: {
 			accept: {
-				"application/gzip": [".txt.gz"],
+				"application/gzip": [".zip"],
 			},
 			maxSize: 10 * 1024 * 1024,
 			maxFiles: 1,
 		},
 	});
+
+	const uploadAPI = async (file: File) => {
+		try {
+			const formData = new FormData();
+
+			// ✅ Keep the original file and name without modification
+			formData.append("file", file);
+
+			const response = await fetch("http://localhost:4000/api/upload", {
+				method: "POST",
+				body: formData,
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || "File upload failed");
+			}
+
+			const data = await response.json();
+			console.log("File uploaded successfully:", data);
+			return data;
+		} catch (error) {
+			console.error("Error uploading file:", error);
+			throw error;
+		}
+	};
+
 
 	const handleProcessFile = async () => {
 		if (!currentFile) return;
@@ -63,6 +90,9 @@ export function FileDropzone() {
 		setError(null);
 
 		try {
+			const uploadResult = await uploadAPI(currentFile);
+			console.log("Upload response:", uploadResult);
+
 			const datasetInput = {
 				name: fileNameRef.current?.value || currentFile.name,
 				description: descriptionRef.current?.value || "",
@@ -83,17 +113,17 @@ export function FileDropzone() {
 						},
 						body: JSON.stringify({ analysisId: result.id }),
 					});
-					
+
 					if (!response.ok) {
 						const errorData = await response.json();
 						throw new Error(errorData.error || 'Failed to process analysis');
 					}
-					
+
 					console.log('Analysis processing started');
 				} catch (processError) {
 					console.error("Error processing analysis:", processError);
-					setError("File uploaded but analysis processing failed: " + 
-							 (processError instanceof Error ? processError.message : String(processError)));
+					setError("File uploaded but analysis processing failed: " +
+						(processError instanceof Error ? processError.message : String(processError)));
 				}
 			}
 
@@ -114,7 +144,7 @@ export function FileDropzone() {
 					<DropzoneTrigger className="w-full flex flex-col items-center text-center pt-20 pb-16 gap-4 text-lg">
 						<p>Drop your dataset here, or import from your local files</p>
 						<DropzoneMessage className="mt-2 text-center">
-							Supported format: txt.gz (max 10MB)
+							Supported format: .zip
 						</DropzoneMessage>
 						<img
 							src={importIcon.src}

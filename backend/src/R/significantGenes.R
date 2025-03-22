@@ -37,13 +37,12 @@ library(ggplot2)
 # -------------------------------------------------------------------------
 
 # Define directories
-dataset_dir <- "backend/src/R/dataset"
-output_dir <- "backend/src/R/public/uploaded"
+retrieve_dir <- "../public/dragdrop_files/unzipped"
+output_dir <- "../backend/src/R/public/output"
 
 if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)  # Ensure the output directory exists
 }
-
 # options(timeout = 600)
 
 # # Find the first GSE file in the dataset directory
@@ -62,14 +61,14 @@ if (!dir.exists(output_dir)) {
 # length(gse)
 
 # Read expression data
-expression_file <- file.path(output_dir, "expression_data.csv")
+expression_file <- file.path(retrieve_dir, "expression_data.csv")
 if (!file.exists(expression_file)) {
   stop("Error: Expression data file not found at ", expression_file)
 }
 expressionData <- read_csv(expression_file)
 
 # Read phenotype data
-phenotype_file <- file.path(output_dir, "phenotype_data.csv")
+phenotype_file <- file.path(retrieve_dir, "phenotype_data.csv")
 if (!file.exists(phenotype_file)) {
   stop("Error: Phenotype data file not found at ", phenotype_file)
 }
