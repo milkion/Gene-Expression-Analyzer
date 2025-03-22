@@ -44,22 +44,22 @@ if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)  # Ensure the output directory exists
 }
 
-options(timeout = 600)
+# options(timeout = 600)
 
-# Find the first GSE file in the dataset directory
-file_list <- list.files(dataset_dir, pattern = "^GSE.*\\.txt\\.gz$", full.names = TRUE)
+# # Find the first GSE file in the dataset directory
+# file_list <- list.files(dataset_dir, pattern = "^GSE.*\\.txt\\.gz$", full.names = TRUE)
 
-# Check if any matching files are found
-if (length(file_list) == 0) {
-  stop("No matching GSE dataset found in ", dataset_dir)
-} 
+# # Check if any matching files are found
+# if (length(file_list) == 0) {
+#   stop("No matching GSE dataset found in ", dataset_dir)
+# } 
 
-gse_file <- file_list[1]  # Select the first file
+# gse_file <- file_list[1]  # Select the first file
 
-# Load the dataset
-gse <- getGEO(filename = gse_file, GSEMatrix = TRUE, AnnotGPL = TRUE)
+# # Load the dataset
+# gse <- getGEO(filename = gse_file, GSEMatrix = TRUE, AnnotGPL = TRUE)
 
-length(gse)
+# length(gse)
 
 # Read expression data
 expression_file <- file.path(output_dir, "expression_data.csv")
