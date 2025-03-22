@@ -8,7 +8,7 @@ import jwt from "jsonwebtoken";
 import express from "express";
 import cors from "cors";
 import { expressMiddleware } from "@apollo/server/express4";
-import { processAnalysis } from "./api/processAnalysis.js";
+import { processAnalysis } from "./API/processAnalysis.js";
 
 // Export the runR function so it can be used in other files
 export { runR } from "./utils/rScriptRunner.js";
@@ -29,23 +29,23 @@ async function startServer() {
 	// Connect to MongoDB
 	await mongoose.connect(MONGODB_URI);
 	console.log("Connected to MongoDB");
-	
+
 	// Start Apollo Server
 	await server.start();
-	
+
 	// Create Express app
 	const app = express();
-	
+
 	// Apply middleware
 	app.use(cors());
 	app.use(express.json());
-	
+
 	// Set up GraphQL endpoint
 	app.use('/graphql', expressMiddleware(server, {
 		context: async ({ req }) => {
 			// Get the token from the Authorization header
 			const auth = req.headers.authorization || '';
-			
+
 			if (auth.startsWith('Bearer ')) {
 				try {
 					const token = auth.substring(7);
@@ -56,15 +56,15 @@ async function startServer() {
 					console.log("Invalid token:", err);
 				}
 			}
-			
+
 			// Return empty context if no valid auth
 			return {};
 		},
 	}));
-	
+
 	// Set up API endpoints
 	app.post('/api/process-analysis', processAnalysis);
-	
+
 	// Start the server
 	app.listen(PORT, () => {
 		console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
