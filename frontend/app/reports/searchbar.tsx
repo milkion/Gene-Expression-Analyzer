@@ -1,18 +1,21 @@
 "use client";
 
 interface SearchBarProps {
-    searchQuery: string;
-    setSearchQuery: (query: string) => void;
+	searchQuery: string;
+	setSearchQuery: (query: string) => void;
 }
 
-export default function SearchBar({ searchQuery, setSearchQuery }: SearchBarProps) {
-    return (
-        <input
-            type="text"
-            placeholder="Search by report id..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="border p-2 w-full max-w-xs rounded-md"
-        />
-    );
+export default function SearchBar({
+	searchQuery,
+	setSearchQuery,
+}: SearchBarProps) {
+	return (
+		<input 
+			type="text"
+			placeholder="Search by Report ID"
+			value={searchQuery}
+			onChange={(e) => setSearchQuery(e.target.value)}
+			className="border-2 w-full max-w-md rounded-3xl px-5 py-2"
+		/>
+	);
 }

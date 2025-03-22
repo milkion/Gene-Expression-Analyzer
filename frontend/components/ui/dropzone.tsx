@@ -643,7 +643,7 @@ const DropzoneMessage = forwardRef<HTMLParagraphElement, DropzoneMessageProps>(
         id={context.rootMessageId}
         {...rest}
         className={cn(
-          "h-5 text-[0.8rem] font-medium text-destructive",
+          "h-5 text-[0.9rem] font-medium text-destructive",
           rest.className,
         )}
       >

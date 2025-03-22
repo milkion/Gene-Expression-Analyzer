@@ -21,6 +21,7 @@ interface AnalysisArgs {
 interface DatasetInput {
 	name: string;
 	description: string;
+	size: number;
 }
 
 interface CreateAnalysisArgs {
@@ -146,7 +147,7 @@ export const resolvers = {
 	Mutation: {
 		async createAnalysis(
 			_: ResolverParent,
-			{ datasetInput: { name, description } }: CreateAnalysisArgs
+			{ datasetInput: { name, description, size } }: CreateAnalysisArgs
 		): Promise<any> {
 			try {
 				// Create a new dataset
@@ -154,7 +155,7 @@ export const resolvers = {
 					name: name,
 					description: description,
 					uploadedAt: new Date(),
-					size: 0, // To change (or maybe remove)
+					size: size,
 				});
 
 				const savedDataset = await dataset.save();
@@ -162,7 +163,7 @@ export const resolvers = {
 				// Create a new analysis linked to this dataset
 				const analysis = new Analysis({
 					date: new Date(),
-					status: "FETCHING", // Initial status
+					status: "ANALYZING", // Initial status
 					dataset: savedDataset._id,
 					results: [],
 					visualization: null,
@@ -373,13 +374,16 @@ export const resolvers = {
 		},
 	},
 	Analysis: {
-		async result(parent: any): Promise<any[]> {
+		async result(parent: any): Promise<any> {
 			try {
-				if (parent.results.length === 0) return [];
+				if (!parent.results || parent.results.length === 0) {
+					return { results: [] }; // Return empty array instead of null
+				}
 
-				return await Result.find({ _id: { $in: parent.results } }).populate(
-					"gene"
-				);
+				const results = await Result.find({
+					_id: { $in: parent.results },
+				}).populate("gene");
+				return { results };
 			} catch (error: unknown) {
 				if (error instanceof Error) {
 					throw new Error(`Failed to fetch results: ${error.message}`);
@@ -420,5 +424,3 @@ export const resolvers = {
 		},
 	},
 };
-
-

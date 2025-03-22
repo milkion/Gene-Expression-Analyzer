@@ -31,7 +31,7 @@ export default function RegisterPage() {
 			// Store token in localStorage
 			localStorage.setItem("token", data.createUser.token);
 			// Redirect to dashboard
-			router.push("/dashboard");
+			router.push("/");
 		},
 		onError: (err) => {
 			setError(err.message);
@@ -66,7 +66,11 @@ export default function RegisterPage() {
 				<div className="text-center">
 					{/* Bigger Avatar Logo */}
 					<div className="flex justify-center mb-5">
-						<img src="/avatar.svg" alt="User Avatar" className="w-32 h-32 object-contain" />
+						<img
+							src="/avatar.svg"
+							alt="User Avatar"
+							className="w-32 h-32 object-contain"
+						/>
 					</div>
 
 					<form onSubmit={handleSubmit}>
@@ -75,7 +79,11 @@ export default function RegisterPage() {
 
 						{/* Name Input */}
 						<div className="flex items-center w-80 h-12 rounded-full border bg-gray-100 px-3 py-1 mb-4">
-							<img src="/name-icon.svg" alt="Name Icon" className="w-5 h-5 ml-1" />
+							<img
+								src="/name-icon.svg"
+								alt="Name Icon"
+								className="w-5 h-5 ml-1"
+							/>
 							<input
 								type="text"
 								name="name"
@@ -89,7 +97,11 @@ export default function RegisterPage() {
 
 						{/* Email Input */}
 						<div className="flex items-center w-80 h-12 rounded-full border bg-gray-100 px-3 py-1 mb-4">
-							<img src="/email-icon.svg" alt="Email Icon" className="w-5 h-5 ml-1" />
+							<img
+								src="/email-icon.svg"
+								alt="Email Icon"
+								className="w-5 h-5 ml-1"
+							/>
 							<input
 								type="email"
 								name="email"
@@ -103,7 +115,11 @@ export default function RegisterPage() {
 
 						{/* Password Input */}
 						<div className="flex items-center w-80 h-12 rounded-full border bg-gray-100 px-3 py-1 mb-4">
-							<img src="/lock-icon.svg" alt="Password Icon" className="w-5 h-5 ml-1" />
+							<img
+								src="/lock-icon.svg"
+								alt="Password Icon"
+								className="w-5 h-5 ml-1"
+							/>
 							<input
 								type="password"
 								name="password"
@@ -127,7 +143,9 @@ export default function RegisterPage() {
 						</div>
 
 						{/* Login Redirect Button */}
-						<p className="text-gray-600 text-sm mt-2">Already have an account?</p>
+						<p className="text-gray-600 text-sm mt-2">
+							Already have an account?
+						</p>
 						<button
 							type="button"
 							onClick={() => router.push("/api/login")} // ✅ Redirect to Login Page
