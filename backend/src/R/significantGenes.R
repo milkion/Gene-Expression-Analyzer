@@ -58,7 +58,7 @@ gse <- getGEO(filename = gse_file, GSEMatrix = TRUE, AnnotGPL = TRUE)
 length(gse)
 
 expressionData <- exprs(gse)
-expressionData
+#expressionData
 
 phenotypeData <- pData(gse[1])
 phenotypeData
@@ -186,7 +186,8 @@ colnames(significantGenes)[colnames(significantGenes) == "geneSymbol"] <- "symbo
 colnames(significantGenes)[colnames(significantGenes) == "P.Value"] <- "PValue"
 colnames(significantGenes)[colnames(significantGenes) == "adj.P.Val"] <- "adjPValue"
 
-print(significantGenes)
+# print(significantGenes)
+print(phenotypeData)
 
 # output_file <- file.path(output_dir, "significantGenes.csv")
 # write.csv(significantGenes, file = output_file, row.names = TRUE)

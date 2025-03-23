@@ -1,12 +1,16 @@
 "use client";
+
 import { NavigationBar } from "@/components/navigation-bar";
 import { FileDropzone } from "@/components/dropzone";
+import  Protected  from "@/components/Protected"; 
 
 export default function Home() {
 	return (
-		<div>
-			<NavigationBar />
-			<FileDropzone />
-		</div>
+		<Protected> 
+			<div>
+				<NavigationBar />
+				<FileDropzone />
+			</div>
+		</Protected>
 	);
 }

@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 
 import importIcon from "@/public/import.svg";
 import { createAnalysis } from "../../backend/src/graphql/mutation";
+import { SearchBar } from "./searchbar";
 
 
 
