@@ -160,23 +160,29 @@ export default function DetailedReportPage() {
                                             </tbody>
                                         </table>
                                     </div>
-                                    <h2 className="font-medium mt-10 m-4">
-                                        Gene Analysis Visualization
-                                    </h2>
-                                    <div className="bg-gray-100 rounded-2xl pt-10 py-6">
-                                        {/* TODO: Styling. Adjust width, height & alignment, follow FIGMA */}
-                                        {imageSrc ? (
-                                            <img
-                                                id="base64-image"
-                                                src={imageSrc}
-                                                alt="Visualization"
-                                                width="576"
-                                                height="432"
-                                            />
-                                        ) : (
-                                            <p>Loading image...</p>
-                                        )}
-                                    </div>
+                                    {imageSrc ? (
+                                        <div>
+                                            <h2 className="font-medium mt-10 m-4">
+                                                Visualizations
+                                            </h2>
+                                            <div className="bg-gray-100 rounded-2xl py-10 px-10">
+                                                <h2 className="font-medium m-4">
+                                                    Graphs
+                                                </h2>
+                                                <div className="bg-white rounded-2xl py-10 px-10 flex justify-center items-center">
+                                                    <img
+                                                        id="base64-image"
+                                                        src={imageSrc}
+                                                        alt="Visualization"
+                                                        width="576"
+                                                        height="432"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <></>
+                                    )}
                                 </div>
                             ) : (
                                 <p>No analysis results available.</p>
