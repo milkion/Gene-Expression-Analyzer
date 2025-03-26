@@ -65,7 +65,7 @@ export function runR(analysisId) {
 					const updatePayload = {
 						results: {
 							results: significantGenes,
-							visualization: "backend/src/image.png",
+							visualization: data.volcanoPlotBase64,
 						},
 					};
 
