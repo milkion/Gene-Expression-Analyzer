@@ -114,10 +114,10 @@ export function FileDropzone() {
 	};
 
 	return (
-		<div className="p-8">
-			<h2 className="text-lg font-medium mb-2">Dataset Upload</h2>
+		<div className="px-20 py-8">
+			<h2 className="text-2xl font-medium mb-4 ml-4">Dataset Upload</h2>
 			<Dropzone {...dropzone}>
-				<DropZoneArea>
+				<DropZoneArea className="min-h-[300px]">
 					<DropzoneTrigger className="w-full flex flex-col items-center text-center pt-20 pb-16 gap-4 text-lg">
 						<p>Drop your dataset here, or import from your local files</p>
 						<DropzoneMessage className="mt-2 text-center">
@@ -128,7 +128,10 @@ export function FileDropzone() {
 							alt="File icon"
 							className="my-4 h-20 w-20"
 						/>
-						<p>or search for dataset from the GEO database below</p>
+						<p className="max-w-xl">
+							Please ensure that the zip file contains the expression data and
+							the phenotype data
+						</p>
 						{/* <SearchBar /> */}
 					</DropzoneTrigger>
 				</DropZoneArea>

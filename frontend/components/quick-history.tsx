@@ -40,8 +40,8 @@ export function QuickHistory() {
 	}
 
 	return (
-		<div className="mt-2 mx-8">
-			<h2 className="text-lg font-medium mb-4">Quick History</h2>
+		<div className="px-20 mt-2">
+			<h2 className="text-2xl font-medium ml-4 mb-4">Quick History</h2>
 			<div className="bg-black/5 rounded-xl p-4 shadow-sm">
 				<div className="grid grid-cols-3 gap-4 px-4 py-2 font-medium text-gray-600">
 					<div>Dataset Name</div>
