@@ -55,6 +55,8 @@ const GET_ANALYSIS = gql`
 export default function DetailedReportPage() {
 	const params = useParams();
 	const analysisId = params.id as string;
+	const [sortField, setSortField] = useState<string | null>(null);
+	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
 	// Fetch data using useQuery
 	const { loading, error, data } = useQuery(GET_ANALYSIS, {
@@ -144,6 +146,30 @@ export default function DetailedReportPage() {
 			});
 	};
 
+	const handleSort = (field: string) => {
+		if (sortField === field) {
+			// If clicking the same field, toggle direction
+			setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+		} else {
+			// If clicking a new field, set it with ascending direction
+			setSortField(field);
+			setSortDirection("asc");
+		}
+	};
+
+	const getSortedResults = () => {
+		if (!analysis?.result?.results || !sortField)
+			return analysis?.result?.results;
+
+		return [...analysis.result.results].sort((a, b) => {
+			const aValue = a[sortField];
+			const bValue = b[sortField];
+			const modifier = sortDirection === "asc" ? 1 : -1;
+
+			return aValue > bValue ? modifier : -modifier;
+		});
+	};
+
 	return (
 		<Protected>
 			<div>
@@ -182,16 +208,38 @@ export default function DetailedReportPage() {
 											<thead>
 												<tr>
 													<th className="py-2">Gene Symbol</th>
-													<th className="py-2">Log FC</th>
-													<th className="py-2">Avg Expression</th>
-													<th className="py-2">t-Value</th>
-													<th className="py-2">p-Value</th>
-													<th className="py-2">Adjusted p-Value</th>
-													<th className="py-2">B Statistic</th>
+													{[
+														{ key: "logFC", label: "Log FC" },
+														{ key: "avgExpr", label: "Avg Expression" },
+														{ key: "tValue", label: "t-Value" },
+														{ key: "pValue", label: "p-Value" },
+														{
+															key: "adjustedPValue",
+															label: "Adjusted p-Value",
+														},
+														{ key: "bStat", label: "B Statistic" },
+													].map(({ key, label }) => (
+														<th
+															key={key}
+															className="py-2 cursor-pointer hover:bg-gray-200 transition-colors"
+															onClick={() => handleSort(key)}
+														>
+															<div className="flex items-center justify-center gap-1">
+																{label}
+																<span className="text-gray-400">
+																	{sortField === key
+																		? sortDirection === "asc"
+																			? "↑"
+																			: "↓"
+																		: "↕"}
+																</span>
+															</div>
+														</th>
+													))}
 												</tr>
 											</thead>
 											<tbody>
-												{analysis.result.results.map((result) => (
+												{getSortedResults()?.map((result) => (
 													<tr key={result.id} className="hover:bg-gray-50">
 														<td className="py-2 text-center">
 															<button
@@ -228,13 +276,22 @@ export default function DetailedReportPage() {
 										</table>
 									</div>
 
-									<div className="mt-6 bg-gray-100 rounded-2xl p-6 relative">
-										<h3 className="font-medium">Copy Gene Symbols</h3>
+									<div className="mt-6 bg-violet-200 rounded-2xl p-6 relative">
+										<h3 className="text-md">Batch Query Gene Symbols</h3>
 
 										<p className="text-sm text-gray-600 mt-2 max-w-3xl">
 											Use the button below to copy all gene symbols to your
-											clipboard. Each symbol will be on a new line for easy
-											pasting into other applications.
+											clipboard. You can paste these genes directly into
+											<a
+												href="https://ctdbase.org/tools/batchQuery.go"
+												target="_blank"
+												rel="noopener noreferrer"
+												className="text-blue-600 hover:underline"
+											>
+												{" "}
+												CTD Batch Query
+											</a>{" "}
+											to batch query gene information.
 										</p>
 
 										<Button
