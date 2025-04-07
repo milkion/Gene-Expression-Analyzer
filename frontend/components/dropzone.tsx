@@ -27,8 +27,6 @@ import importIcon from "@/public/import.svg";
 import { createAnalysis } from "../../backend/src/graphql/mutation";
 import { SearchBar } from "./searchbar";
 
-
-
 export function FileDropzone() {
 	const [showDialog, setShowDialog] = useState(false);
 	const [currentFile, setCurrentFile] = useState<File | null>(null);
@@ -77,24 +75,31 @@ export function FileDropzone() {
 			if (result && result.id) {
 				try {
 					// Updated to use the correct backend URL - make sure this matches your backend server
-					const response = await fetch('http://localhost:4000/api/process-analysis', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-						body: JSON.stringify({ analysisId: result.id }),
-					});
-					
+					const response = await fetch(
+						"http://localhost:4000/api/process-analysis",
+						{
+							method: "POST",
+							headers: {
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ analysisId: result.id }),
+						}
+					);
+
 					if (!response.ok) {
 						const errorData = await response.json();
-						throw new Error(errorData.error || 'Failed to process analysis');
+						throw new Error(errorData.error || "Failed to process analysis");
 					}
-					
-					console.log('Analysis processing started');
+
+					console.log("Analysis processing started");
 				} catch (processError) {
 					console.error("Error processing analysis:", processError);
-					setError("File uploaded but analysis processing failed: " + 
-							 (processError instanceof Error ? processError.message : String(processError)));
+					setError(
+						"File uploaded but analysis processing failed: " +
+							(processError instanceof Error
+								? processError.message
+								: String(processError))
+					);
 				}
 			}
 
@@ -110,6 +115,7 @@ export function FileDropzone() {
 
 	return (
 		<div className="p-8">
+			<h2 className="text-lg font-medium mb-2">Dataset Upload</h2>
 			<Dropzone {...dropzone}>
 				<DropZoneArea>
 					<DropzoneTrigger className="w-full flex flex-col items-center text-center pt-20 pb-16 gap-4 text-lg">

@@ -4,7 +4,7 @@ import { useState } from "react";
 import SearchBar from "./searchbar";
 import FilterDropdown from "./filterdropdown";
 import { NavigationBar } from "@/components/navigation-bar";
-import { gql, useQuery } from "@apollo/client";
+import { gql, useQuery, useMutation } from "@apollo/client";
 import { useRouter } from "next/navigation";
 import Protected from "@/components/Protected";
 
@@ -23,17 +23,45 @@ const GET_ANALYSES = gql`
 	}
 `;
 
+const DELETE_ANALYSIS = gql`
+	mutation DeleteAnalysis($id: ID!) {
+		deleteAnalysis(id: $id)
+	}
+`;
+
 export default function ReportsPage() {
 	const router = useRouter();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedFilter, setSelectedFilter] = useState("");
 
 	// Fetch data using useQuery
-	const { loading, error, data } = useQuery(GET_ANALYSES);
+	const { loading, error, data, refetch } = useQuery(GET_ANALYSES);
+
+	const [deleteAnalysis, { loading: deleteLoading }] = useMutation(DELETE_ANALYSIS);
+
 
 	// Function to navigate to detail page
 	const navigateToDetails = (reportId: string) => {
 		router.push(`reports/${reportId}`);
+	};
+
+	const handleDelete = async (e: React.MouseEvent, reportId: string) => {
+		e.stopPropagation(); // Prevent navigation to details page
+		
+		if (confirm("Are you sure you want to delete this report?")) {
+			try {
+				await deleteAnalysis({ 
+					variables: { id: reportId },
+					onCompleted: () => {
+						// Refetch the data to update the UI
+						refetch();
+					}
+				});
+			} catch (err) {
+				console.error("Error deleting report:", err);
+				alert("Failed to delete report. Please try again.");
+			}
+		}
 	};
 
 	if (loading) return <p>Loading...</p>;
@@ -101,7 +129,10 @@ export default function ReportsPage() {
 												</div>
 											</div>
 											<div className="font-medium">{report.status}</div>
-											<button className="text-gray-500 justify-self-center">
+											<button 
+												onClick={(e) => handleDelete(e, report.id)}
+												className="text-gray-500 justify-self-center"
+											>
 												<img
 													src="./trash.svg"
 													alt="Delete"

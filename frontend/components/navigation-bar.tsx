@@ -6,7 +6,7 @@ import {
 	NavigationMenuLink,
 	NavigationMenuList,
 } from "@/components/ui/navigation-menu";
-import Link from 'next/link';
+import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import LogoutButton from "@/components/LogoutButton"; // ✅ Import LogoutButton
 import { useEffect, useState } from "react";
@@ -22,7 +22,9 @@ export function NavigationBar() {
 	return (
 		<div>
 			<div className="flex flex-row justify-between items-center max-w mx-auto px-20 py-6">
-				<a href="/" className="font-medium text-3xl hover:cursor-pointer">BioGeneX</a>
+				<a href="/" className="font-medium text-3xl hover:cursor-pointer">
+					BioGeneX
+				</a>
 
 				<div className="ml-auto list-none">
 					<NavigationMenu>
@@ -31,7 +33,10 @@ export function NavigationBar() {
 								<NavigationMenuLink href="/reports">Reports</NavigationMenuLink>
 							</NavigationMenuItem>
 							<NavigationMenuItem>
-								<NavigationMenuLink href="/profile" className="cursor-pointer hover:font-semibold">
+								<NavigationMenuLink
+									href="/profile"
+									className="cursor-pointer hover:font-semibold"
+								>
 									Profile
 								</NavigationMenuLink>
 							</NavigationMenuItem>

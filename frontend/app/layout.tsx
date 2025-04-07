@@ -34,12 +34,10 @@ export default function RootLayout({
 	}, [router]);
 
 	return (
-		<html lang="en"> 
+		<html lang="en">
 			<body className={`${mulish.variable} antialiased`}>
 				{client ? (
-					<ApolloProvider client={client}>
-						{children}
-					</ApolloProvider>
+					<ApolloProvider client={client}>{children}</ApolloProvider>
 				) : (
 					<div className="h-screen flex items-center justify-center">
 						Loading...
