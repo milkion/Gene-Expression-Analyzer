@@ -2,17 +2,21 @@ import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { typeDefs } from "./graphql/typeDefs.js";
 import { resolvers } from "./graphql/resolvers.js";
+import { ResponseData } from "./graphql/resolvers.js";
+import fs from "fs";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import jwt from "jsonwebtoken";
+import { authenticateUser } from "./models/middleware/authMiddleware.js";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { expressMiddleware } from "@apollo/server/express4";
 import { processAnalysis } from "./api/processAnalysis.js";
 import path from "path";
-import multer, { Multer } from "multer";
-// Export runR for external use
+import multer, { Multer } from "multer";// Export runR for external use
 export { runR } from "./utils/rScriptRunner.js";
+import jwt from "jsonwebtoken";
+
+
 dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || "";

@@ -31,6 +31,7 @@ library(dplyr)
 library(tibble)
 library(jsonlite)
 library(httr)
+library(base64enc)
 library(readr)
 library(ggplot2)
 
@@ -145,10 +146,13 @@ results$probeID <- rownames(expressionData)[as.numeric(rownames(results))]
 # Verify output
 head(results[, c("probeID", "logFC", "adj.P.Val")])
 
-# Save volcano plot as PDF
-pdf_file <- file.path(output_dir, "volcano_plot.pdf")
 
-pdf(pdf_file, width = 8, height = 6)
+
+# Define the PDF output file
+png_file <- file.path(output_dir, "volcano_plot.png")
+
+# Open the PDF device
+png(png_file, width = 800, height = 600)
 
 volcano_plot <- ggplot(results, aes(x = logFC, y = -log10(adj.P.Val))) +
   geom_point(aes(color = adj.P.Val < 0.05 & abs(logFC) > 1), alpha = 0.6) +
@@ -160,11 +164,16 @@ volcano_plot <- ggplot(results, aes(x = logFC, y = -log10(adj.P.Val))) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "blue") +
   geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "blue")
 
-print(volcano_plot) 
+#Red dots - genes significantly differential expressed, fold change > 1
+volcano_plot
+print(volcano_plot)
 dev.off()
 cat("Volcano plot PDF saved to:", pdf_file, "\n")
 
-# Identify significant genes
+# Encode the PDF file as a Base64 string
+volcano_plot_base64 <- base64encode(png_file)
+
+#Significant Differential Expressed Genes
 pThreshold <- 0.05
 logThreshold <- 1
 
@@ -206,7 +215,8 @@ colnames(significantGenes)[colnames(significantGenes) == "adj.P.Val"] <- "adjPVa
 
 json_output <- toJSON(list(
   message = "Success",
-  significantGenes = significantGenes
+  significantGenes = significantGenes,
+  volcanoPlotBase64 = volcano_plot_base64
 ), pretty = TRUE, auto_unbox = TRUE)
 
 cat(json_output)

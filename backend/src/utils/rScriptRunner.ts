@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from "fs";
 import { spawn } from "child_process";
 import { ResponseData } from "../graphql/resolvers.js";
 import { updateAnalysis } from "../graphql/mutation.js";
@@ -101,7 +101,7 @@ export async function runR(analysisId: string): Promise<any> {
 								bStat: gene.B
 							}));
 
-							const updatePayload = { results: { results: significantGenes } };
+							const updatePayload = { results: { results: significantGenes, visualization: data.volcanoPlotBase64, } };
 							await updateAnalysis(analysisId, updatePayload.results);
 
 							console.log("SUCCESS: Analysis updated successfully.");

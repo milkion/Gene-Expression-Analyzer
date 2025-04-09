@@ -25,8 +25,7 @@ import { Button } from "@/components/ui/button";
 
 import importIcon from "@/public/import.svg";
 import { createAnalysis } from "../../backend/src/graphql/mutation";
-
-
+import { SearchBar } from "./searchbar";
 
 export function FileDropzone() {
 	const [showDialog, setShowDialog] = useState(false);
@@ -116,7 +115,7 @@ export function FileDropzone() {
 
 					if (!response.ok) {
 						const errorData = await response.json();
-						throw new Error(errorData.error || 'Failed to process analysis');
+						throw new Error(errorData.error || "Failed to process analysis");
 					}
 
 					console.log('Analysis processing started');
@@ -138,9 +137,10 @@ export function FileDropzone() {
 	};
 
 	return (
-		<div className="p-8">
+		<div className="px-20 py-8">
+			<h2 className="text-2xl font-medium mb-4 ml-4">Dataset Upload</h2>
 			<Dropzone {...dropzone}>
-				<DropZoneArea>
+				<DropZoneArea className="min-h-[300px]">
 					<DropzoneTrigger className="w-full flex flex-col items-center text-center pt-20 pb-16 gap-4 text-lg">
 						<p>Drop your dataset here, or import from your local files</p>
 						<DropzoneMessage className="mt-2 text-center">
@@ -151,7 +151,10 @@ export function FileDropzone() {
 							alt="File icon"
 							className="my-4 h-20 w-20"
 						/>
-						<p>or search for dataset from the GEO database below</p>
+						<p className="max-w-xl">
+							Please ensure that the zip file contains the expression data and
+							the phenotype data
+						</p>
 						{/* <SearchBar /> */}
 					</DropzoneTrigger>
 				</DropZoneArea>
