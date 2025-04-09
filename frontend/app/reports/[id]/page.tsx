@@ -232,12 +232,12 @@ export default function DetailedReportPage() {
 									
 									{/* Top Left - Statistical Significance */}
 									<div className="bg-white rounded-xl shadow-sm p-4 col-start-1 row-start-1 flex flex-col items-center justify-center text-center">
-									<h3 className="font-semibold text-sm mb-2">Statistical Significance</h3>
-									<p className="text-sm text-gray-600">
+									<h3 className="font-semibold mb-2">Statistical Significance</h3>
+									<p>
 										Lowest adjusted p-value:{" "}
 										{Number(analysis.result.results[0].adjustedPValue).toExponential(2)}
 									</p>
-									<p className="text-sm text-gray-600">
+									<p>
 										Indicates high confidence in these top results.
 									</p>
 									</div>
@@ -245,8 +245,8 @@ export default function DetailedReportPage() {
 									<div className="bg-white rounded-xl shadow-sm p-6 col-start-2 row-start-1 row-span-2 flex flex-col items-center justify-center text-center">
 									<h3 className="font-semibold text-md mb-4">Top Genes</h3>
 									<ul className="space-y-2">
-										{analysis.result.results.slice(0, 5).map((r) => (
-										<li key={r.gene.symbol} className="text-lg  text-gray-800">
+										{analysis.result.results.slice(0, 5).map((r: any) => (
+										<li key={r.gene.symbol} className="text-lg">
 											{r.gene.symbol}
 										</li>
 										))}
@@ -255,22 +255,22 @@ export default function DetailedReportPage() {
 
 									{/* Top Right - B Statistic */}
 									<div className="bg-white rounded-xl shadow-sm p-4 col-start-3 row-start-1 flex flex-col items-center justify-center text-center">
-									<h3 className="font-semibold text-sm mb-2">Confidence (B-Statistic)</h3>
-									<p className="text-sm text-gray-600">
+									<h3 className="font-semibold mb-2">Confidence (B-Statistic)</h3>
+									<p>
 										Top B score:{" "}
 										{analysis.result.results[0].bStat.toFixed(2)}
 									</p>
-									<p className="text-sm text-gray-600">
+									<p>
 										Higher B means stronger model confidence.
 									</p>
 									</div>
 
 									{/* Bottom Left - Average Absolute LogFC */}
 									<div className="bg-white rounded-xl shadow-sm p-4 col-start-1 row-start-2 flex flex-col items-center justify-center text-center">
-									<h3 className="font-semibold text-sm mb-2">Avg. LogFC</h3>
-									<p className="text-xl font text-gray-800">
+									<h3 className="font-semibold mb-2">Avg. LogFC</h3>
+									<p className="text-xl font">
 										{(
-										analysis.result.results.reduce((sum, r) => sum + Math.abs(r.logFC), 0) /
+										analysis.result.results.reduce((sum: number, r: any) => sum + Math.abs(r.logFC), 0) /
 										analysis.result.results.length
 										).toFixed(4)}
 									</p>
@@ -278,8 +278,8 @@ export default function DetailedReportPage() {
 
 									{/* Bottom Right - Total Genes */}
 									<div className="bg-white rounded-xl shadow-sm p-4 col-start-3 row-start-2 flex flex-col items-center justify-center text-center">
-									<h3 className="font-semibold text-sm mb-2">Total genes:</h3>
-									<p className="text-xl font text-gray-700">
+									<h3 className="font-semibold mb-2">Total genes:</h3>
+									<p className="text-xl font">
 										{analysis.result.results.length}
 									</p>
 									</div>

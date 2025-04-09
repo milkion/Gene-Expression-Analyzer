@@ -379,6 +379,28 @@ export const resolvers = {
 				);
 			}
 		},
+		async updateAnalysisStatus(
+			_: any, 
+			{ id, status, errorMessage }: { id: string, status: "FETCHING" | "PARSING" | "ANALYZING" | "COMPLETED" | "FAILED", errorMessage?: string }
+		) {
+			try {
+				const analysis = await Analysis.findById(id);
+				if (!analysis) {
+					throw new Error(`Analysis with ID ${id} not found`);
+				}
+				
+				analysis.status = status;
+				if (errorMessage) {
+					analysis.errorMessage = errorMessage;
+				}
+				await analysis.save();
+				
+				return analysis;
+			} catch (error) {
+				console.error("Error updating analysis status:", error);
+				throw error;
+			}
+		},
 	},
 	// Field resolvers
 	// Field Resolvers to Hide Password

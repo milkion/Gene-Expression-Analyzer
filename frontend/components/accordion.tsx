@@ -32,20 +32,25 @@ export function FAQAccordion() {
 				<AccordionContent className="px-4 py-2">
 					<ol className="list-decimal ml-6 space-y-3 text-lg text-gray-700">
 						<li>
-							Upload your gene expression data file (.txt.gz format) using the
-							dropzone above
+							Prepare your data files (<code className="bg-gray-100 px-1 rounded">expression_data.csv</code> and <code className="bg-gray-100 px-1 rounded">phenotype_data.csv</code>) following the format requirements
 						</li>
+						<li>Compress both files into a ZIP archive</li>
+						<li>Upload your ZIP file using the dropzone above</li>
 						<li>Provide a name and optional description for your dataset</li>
-						<li>Wait for the analysis to complete</li>
+						<li>Wait for the analysis to complete (this may take a few minutes)</li>
 						<li>
 							View your results in the detailed report, including:
 							<ul className="list-disc ml-8 mt-3 space-y-2">
-								<li>Statistical analysis of gene expression</li>
-								<li>Interactive visualizations</li>
+								<li>Statistical analysis of differentially expressed genes</li>
+								<li>Interactive volcano plot visualization</li>
+								<li>Downloadable result tables</li>
 								<li>Links to external gene databases</li>
 							</ul>
 						</li>
 					</ol>
+					<p className="text-lg italic mt-4 text-gray-600">
+						Note: Reports with "ANALYZING" status are still being processed. Reports with "FAILED" status encountered an error during analysis and will show error details.
+					</p>
 				</AccordionContent>
 			</AccordionItem>
 
@@ -55,15 +60,41 @@ export function FAQAccordion() {
 				</AccordionTrigger>
 				<AccordionContent className="px-4 py-2">
 					<p className="text-lg leading-relaxed text-gray-700 mb-3">
-						BioGeneX accepts compressed text files (.txt.gz) containing
-						normalized gene expression data. The file should be structured with:
+						BioGeneX accepts ZIP files containing these <strong>exact filename</strong> CSV files:
 					</p>
-					<ul className="list-disc ml-8 space-y-2 text-lg text-gray-700">
-						<li>Genes as rows</li>
-						<li>Samples as columns</li>
-						<li>Tab-separated values</li>
-						<li>Maximum file size: 10MB</li>
-					</ul>
+					
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div className="bg-gray-50 rounded-lg p-4">
+							<h3 className="font-semibold text-lg mb-2">1. expression_data.csv</h3>
+							<ul className="list-disc ml-6 space-y-2 text-lg text-gray-700">
+								<li><strong>Filename must be exact:</strong> <code className="bg-gray-100 px-1 rounded">expression_data.csv</code></li>
+								<li>First column: Probe/gene identifiers</li>
+								<li>Remaining columns: Expression values for each sample</li>
+								<li>Numeric values for expression measurements</li>
+							</ul>
+						</div>
+						
+						<div className="bg-gray-50 rounded-lg p-4">
+							<h3 className="font-semibold text-lg mb-2">2. phenotype_data.csv</h3>
+							<ul className="list-disc ml-6 space-y-2 text-lg text-gray-700">
+								<li><strong>Filename must be exact:</strong> <code className="bg-gray-100 px-1 rounded">phenotype_data.csv</code></li>
+								<li>Must include a <code className="bg-gray-100 px-1 rounded">title</code> column</li>
+								<li><strong>Important:</strong> At least some samples <em>must</em> have "control" in their title</li>
+								<li>Samples with "control" in the title (case-insensitive) are treated as controls</li>
+								<li>All other samples are treated as diseased/experimental</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div className="bg-amber-50 border-l-4 border-amber-500 p-4 mt-6">
+						<p className="text-lg leading-relaxed text-amber-800">
+							<strong>Note:</strong> The analysis will fail if the files are not named exactly as specified or if no control samples are identified.
+						</p>
+					</div>
+					
+					<p className="text-lg leading-relaxed text-gray-700 mt-4">
+						Both files should be bundled in a ZIP archive (max size: 10MB) for upload.
+					</p>
 				</AccordionContent>
 			</AccordionItem>
 

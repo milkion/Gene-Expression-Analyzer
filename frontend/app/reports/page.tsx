@@ -15,6 +15,7 @@ const GET_ANALYSES = gql`
 			id
 			status
 			date
+			errorMessage
 			dataset {
 				name
 				description
@@ -34,8 +35,11 @@ export default function ReportsPage() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedFilter, setSelectedFilter] = useState("");
 
-	// Fetch data using useQuery
-	const { loading, error, data, refetch } = useQuery(GET_ANALYSES);
+	// Fetch data using useQuery with polling
+	const { loading, error, data, refetch } = useQuery(GET_ANALYSES, {
+		pollInterval: 5000, // Refetch every 5 seconds (5000ms)
+		fetchPolicy: "network-only" // Always fetch from network to get latest data
+	});
 
 	const [deleteAnalysis, { loading: deleteLoading }] = useMutation(DELETE_ANALYSIS);
 
@@ -114,19 +118,31 @@ export default function ReportsPage() {
 									let bgColor = "bg-gray-200";
 									if (report.status === "COMPLETED") bgColor = "bg-green-200";
 									else if (report.status === "FAILED") bgColor = "bg-red-200";
-									else if (report.status === "ANALYZING")
-										bgColor = "bg-amber-200";
+									else if (report.status === "ANALYZING") bgColor = "bg-amber-200";
+									
+									// Determine if report should be clickable
+									const isDisabled = report.status === "ANALYZING" || report.status === "FAILED";
+									const cursorStyle = isDisabled ? "cursor-not-allowed" : "cursor-pointer";
+									const opacity = isDisabled ? "opacity-70" : "hover:opacity-90";
+									
 									return (
 										<div
 											key={report.id}
-											className={`${bgColor} rounded-3xl p-8 grid grid-cols-[1fr_300px_100px] items-center cursor-pointer hover:opacity-90 transition-all duration-300`}
-											onClick={() => navigateToDetails(report.id)}
+											className={`${bgColor} rounded-3xl p-8 grid grid-cols-[1fr_300px_100px] items-center ${cursorStyle} ${opacity} transition-all duration-300`}
+											onClick={() => !isDisabled && navigateToDetails(report.id)}
 										>
 											<div>
 												<div className="font-medium">{report.id}</div>
 												<div className="text-sm text-gray-600">
 													Dataset: {report.dataset.name}
 												</div>
+												{isDisabled && (
+													<div className="text-xs text-gray-600 mt-1 italic">
+														{report.status === "ANALYZING" ? 
+															"Analysis in progress - results not ready" : 
+															report.errorMessage || "Analysis failed - no results available"}
+													</div>
+												)}
 											</div>
 											<div className="font-medium">{report.status}</div>
 											<button 

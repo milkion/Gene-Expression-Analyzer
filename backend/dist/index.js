@@ -7,17 +7,27 @@ import express from "express";
 import cors from "cors";
 import { expressMiddleware } from "@apollo/server/express4";
 import { processAnalysis } from "./api/processAnalysis.js";
-// Export the runR function so it can be used in other files
+import multer from "multer"; // Export runR for external use
 export { runR } from "./utils/rScriptRunner.js";
 import jwt from "jsonwebtoken";
 dotenv.config();
 const MONGODB_URI = process.env.MONGODB_URI || "";
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "../public/dragdrop_files");
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    },
+});
 // Initialize Apollo Server
 const server = new ApolloServer({
     typeDefs,
     resolvers,
 });
 const PORT = 4000;
+// Multer setup for file uploads
+const upload = multer({ storage });
 async function startServer() {
     // Connect to MongoDB
     await mongoose.connect(MONGODB_URI);
@@ -29,10 +39,9 @@ async function startServer() {
     // Apply middleware
     app.use(cors());
     app.use(express.json());
-    // Set up GraphQL endpoint
+    // GraphQL endpoint
     app.use('/graphql', expressMiddleware(server, {
         context: async ({ req }) => {
-            // Get the token from the Authorization header
             const auth = req.headers.authorization || '';
             if (auth.startsWith('Bearer ')) {
                 try {
@@ -41,20 +50,26 @@ async function startServer() {
                     return { userId: decoded.userId };
                 }
                 catch (err) {
-                    // Invalid token
                     console.log("Invalid token:", err);
                 }
             }
-            // Return empty context if no valid auth
             return {};
         },
     }));
-    // Set up API endpoints
+    // API endpoint for analysis
     app.post('/api/process-analysis', processAnalysis);
+    // API endpoint for file upload
+    app.post('/api/upload', upload.single("file"), (req, res) => {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
+        console.log("Uploaded file:", req.file);
+        res.json({ message: "File uploaded successfully", file: req.file });
+    });
     // Start the server
     app.listen(PORT, () => {
-        console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
-        console.log(`📡 API endpoints available at http://localhost:${PORT}/api/*`);
+        console.log(`SUCCESS: Server ready at http://localhost:${PORT}/graphql`);
+        console.log(`SUCCESS: API endpoints available at http://localhost:${PORT}/api/*`);
     });
 }
 startServer().catch((error) => {

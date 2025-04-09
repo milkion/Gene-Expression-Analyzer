@@ -61,19 +61,19 @@ if (!dir.exists(output_dir)) {
 
 # length(gse)
 
-# Read expression data
+# Read expression data with explicit column types
 expression_file <- file.path(retrieve_dir, "expression_data.csv")
 if (!file.exists(expression_file)) {
   stop("Error: Expression data file not found at ", expression_file)
 }
-expressionData <- read_csv(expression_file)
+expressionData <- read_csv(expression_file, show_col_types = FALSE)
 
-# Read phenotype data
+# Read phenotype data with explicit column types
 phenotype_file <- file.path(retrieve_dir, "phenotype_data.csv")
 if (!file.exists(phenotype_file)) {
   stop("Error: Phenotype data file not found at ", phenotype_file)
 }
-phenotypeData <- read_csv(phenotype_file)
+phenotypeData <- read_csv(phenotype_file, show_col_types = FALSE)
 
 # Print data to verify
 print("Expression Data:")
@@ -84,50 +84,36 @@ print(head(phenotypeData))
 
 print("---------------------------------------")
 
-# Ensure probeID is a character vector
+# Ensure probeID is a character vector and store it before converting
 probeID <- as.character(expressionData[[1]])
 
-# Convert tibble to a data frame
-expressionData <- as.data.frame(expressionData)
+# Convert tibble to a numeric matrix for analysis
+expressionData <- as.matrix(expressionData[,-1])  # Remove the first column (probe IDs) and convert to matrix
+mode(expressionData) <- "numeric"  # Ensure numeric type
 
-# Ensure lengths match before setting row names
-if (length(probeID) == nrow(expressionData)) {
-  rownames(expressionData) <- probeID
-  expressionData <- expressionData[, -1]
-} else {
-  stop("Length mismatch between probeID and rows of expressionData")
-}
+# Assign row names
+rownames(expressionData) <- probeID
 
 # Verify row names
 cat("Row names after assignment:\n")
 print(head(rownames(expressionData)))
 
+# Replace NA with 0
 expressionData[is.na(expressionData)] <- 0
 
-# Data transformation verification (Log2 transformation check)
-range(expressionData)
-
-# Save histogram as PDF
-hist_pdf_file <- file.path(output_dir, "expression_histogram.pdf")
-
-pdf(hist_pdf_file, width = 8, height = 6)
-
-expression_matrix <- as.matrix(expressionData)
-storage.mode(expression_matrix) <- "numeric"
-
-# Generate histogram
-hist(as.vector(expression_matrix), breaks=100, main="Distribution of Expression Values")
-
-dev.off()
-cat("Histogram PDF saved to:", hist_pdf_file, "\n")
+# Data transformation verification
+print("Range of expression data:")
+print(range(expressionData, na.rm = TRUE))
 
 # Basic statistics
-mean(expression_matrix)
-median(expression_matrix)
+print("Mean of expression data:")
+print(mean(expressionData, na.rm = TRUE))
+print("Median of expression data:")
+print(median(as.vector(expressionData), na.rm = TRUE))
 
 # Limma calculation
-condition <- ifelse(grepl("Stroke", phenotypeData$title), "Stroke", "Control")
-condition <- factor(condition, levels = c("Control", "Stroke"))
+condition <- ifelse(grepl("control", phenotypeData$title, ignore.case = TRUE), "Control", "Diseased")
+condition <- factor(condition, levels = c("Control", "Diseased"))
 
 table(condition)
 
@@ -146,12 +132,10 @@ results$probeID <- rownames(expressionData)[as.numeric(rownames(results))]
 # Verify output
 head(results[, c("probeID", "logFC", "adj.P.Val")])
 
-
-
-# Define the PDF output file
+# Define the PNG output file
 png_file <- file.path(output_dir, "volcano_plot.png")
 
-# Open the PDF device
+# Open the PNG device
 png(png_file, width = 800, height = 600)
 
 volcano_plot <- ggplot(results, aes(x = logFC, y = -log10(adj.P.Val))) +
@@ -168,9 +152,9 @@ volcano_plot <- ggplot(results, aes(x = logFC, y = -log10(adj.P.Val))) +
 volcano_plot
 print(volcano_plot)
 dev.off()
-cat("Volcano plot PDF saved to:", pdf_file, "\n")
+cat("Volcano plot PNG saved to:", png_file, "\n")
 
-# Encode the PDF file as a Base64 string
+# Encode the PNG file as a Base64 string
 volcano_plot_base64 <- base64encode(png_file)
 
 #Significant Differential Expressed Genes

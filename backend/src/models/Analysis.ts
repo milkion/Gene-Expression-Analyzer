@@ -13,6 +13,10 @@ const analysisSchema = new Schema(
 			enum: ["FETCHING", "PARSING", "ANALYZING", "COMPLETED", "FAILED"],
 			default: "ANALYZING",
 		},
+		errorMessage: {
+			type: String,
+			required: false,
+		},
 		dataset: {
 			type: Schema.Types.ObjectId,
 			ref: "Dataset",
