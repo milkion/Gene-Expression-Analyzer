@@ -2,3 +2,5 @@
 *significantGenes*.csv
 /public
 
+backend/src/R/public/output/volcano_plot.png
+backend/dist/index.js
