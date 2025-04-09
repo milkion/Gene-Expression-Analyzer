@@ -6,21 +6,24 @@ import fs from "fs";
 const app = express();
 
 // Ensure upload directory exists
-const uploadDir = path.resolve(__dirname, "../public/dragdrop_files");
+const projectRoot = path.resolve(__dirname, '../../..'); // Going up from dist/utils to the project root
+
+// Resolve the dragdropDir relative to the project root
+const uploadDir = path.join(projectRoot, 'public/dragdrop_files');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
-    console.log("✅ Upload directory created:", uploadDir);
+    console.log("Upload directory created:", uploadDir);
 }
 
 // Configure multer to preserve the original filename
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        console.log("✅ Destination Path:", uploadDir); // Debug path
+        console.log("Destination Path:", uploadDir); // Debug path
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         const safeFilename = path.basename(file.originalname);
-        console.log("✅ Original Filename:", safeFilename); // Debug filename
+        console.log("Original Filename:", safeFilename); // Debug filename
         cb(null, safeFilename);
     },
 });
@@ -33,7 +36,7 @@ app.post("/api/upload", upload.single("file"), (req: Request, res: Response) => 
         return res.status(400).json({ error: "No file uploaded" });
     }
 
-    console.log("✅ Uploaded file:", req.file);
+    console.log("Uploaded file:", req.file);
     res.json({
         message: "File uploaded successfully",
         file: req.file,
@@ -43,4 +46,4 @@ app.post("/api/upload", upload.single("file"), (req: Request, res: Response) => 
 });
 
 const PORT = 4000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}/api/*`));
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}/api/*`));

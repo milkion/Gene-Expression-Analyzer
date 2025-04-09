@@ -3,40 +3,44 @@ import { spawn } from "child_process";
 import { ResponseData } from "../graphql/resolvers.js";
 import { updateAnalysis } from "../graphql/mutation.js";
 import * as path from 'path';
-import { ZipQueue } from './extractZip.js';
+import { ZipExtractor } from './extractZip.js';
 import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Manually define __dirname in ES modules
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 
 async function preprocessFiles(): Promise<void> {
-	const zipQueue = new ZipQueue();
-	const dragdropDir = ("../public/dragdrop_files");
+	const extractor = new ZipExtractor();
+	const projectRoot = path.resolve(__dirname, '../../..'); // Going up from dist/utils to the project root
+
+	// Resolve the dragdropDir relative to the project root
+	const dragdropDir = path.join(projectRoot, 'public/dragdrop_files');
 
 	// Ensure directory exists
 	if (!fs.existsSync(dragdropDir)) {
-		throw new Error(`ERROR: Directory not found: ${dragdropDir}`);
+		throw new Error(`FAILED: Directory not found: ${dragdropDir}`);
 	}
 
-	// Find the first ZIP file
-	const files = fs.readdirSync(dragdropDir).filter((file) => file.endsWith(".zip"));
+	const files = fs.readdirSync(dragdropDir)
+		.filter(file => file.endsWith('.zip'))
+		.map(file => ({
+			file,
+			time: fs.statSync(path.join(dragdropDir, file)).mtime.getTime()
+		}))
+		.sort((a, b) => b.time - a.time);
+
 	if (files.length === 0) {
-		throw new Error("ERROR: No ZIP files found.");
+		throw new Error("FAILED: No ZIP files found.");
 	}
 
-	const zipFilePath = path.join(dragdropDir, files[0]);
-	console.log(`Processing file: ${zipFilePath}`);
+	const zipFilePath = path.join(dragdropDir, files[0].file);
+	console.log(`PROCESS: Processing file: ${zipFilePath}`);
 
-	// Process the ZIP file
-	return new Promise((resolve) => {
-		zipQueue.enqueue(zipFilePath);
+	await extractor.extract(zipFilePath);
 
-		// Handle completion
-		zipQueue.onComplete(() => {
-			console.log("SUCCESS: ZIP extraction complete.");
-			resolve();
-		});
-	});
-}
-
-export function testRun() {
+	console.log("SUCCESS: ZIP extraction complete.");
 }
 
 export async function runR(analysisId: string): Promise<any> {
@@ -46,7 +50,6 @@ export async function runR(analysisId: string): Promise<any> {
 
 
 		const expressionFilePath = ("../public/dragdrop_files/unzipped/expression_data.csv");
-
 		if (fs.existsSync(expressionFilePath)) {
 			console.log("CSV file found at:", expressionFilePath);
 

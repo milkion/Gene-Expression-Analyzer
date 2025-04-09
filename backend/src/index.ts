@@ -8,16 +8,23 @@ import jwt from "jsonwebtoken";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { expressMiddleware } from "@apollo/server/express4";
-import { processAnalysis } from "./API/processAnalysis.js";
-import { runR } from "./utils/rScriptRunner.js";
+import { processAnalysis } from "./api/processAnalysis.js";
+import path from "path";
 import multer, { Multer } from "multer";
-
 // Export runR for external use
 export { runR } from "./utils/rScriptRunner.js";
-
 dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || "";
+
+const storage = multer.diskStorage({
+	destination: function (req, file, cb) {
+		cb(null, "../public/dragdrop_files");
+	},
+	filename: function (req, file, cb) {
+		cb(null, file.originalname);
+	},
+});
 
 // Initialize Apollo Server
 const server = new ApolloServer({
@@ -28,7 +35,7 @@ const server = new ApolloServer({
 const PORT = 4000;
 
 // Multer setup for file uploads
-const upload: Multer = multer({ dest: "../public/dragdrop_files" });
+const upload: Multer = multer({ storage });
 
 // Extend Express namespace for multer's file
 declare global {

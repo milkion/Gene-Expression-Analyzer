@@ -1,63 +1,44 @@
-import { EventEmitter } from 'events';
 import AdmZip from 'adm-zip';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export class ZipQueue extends EventEmitter {
-    private queue: string[] = [];
-    private isProcessing: boolean = false;
-    private outputDir = '../public/dragdrop_files/unzipped';
+export class ZipExtractor {
+    constructor() {
+        const projectRoot = path.resolve(__dirname, '../../..');
+        const outputDir = path.join(projectRoot, 'public/dragdrop_files/unzipped');
 
-    // Add ZIP file to the queue
-    enqueue(zipFilePath: string): void {
-        this.queue.push(zipFilePath);
-        this.processQueue()
-    }
-
-    // Process ZIP files in order
-    private async processQueue(): Promise<void> {
-        if (this.isProcessing) return;
-
-        this.isProcessing = true;
-
-        while (this.queue.length > 0) {
-            const zipFilePath = this.queue.shift() as string;
-            console.log(`Processing: ${zipFilePath}`);
-            try {
-                await this.extractZip(zipFilePath);
-            } catch (err) {
-                console.error(`ERROR: Error processing ${zipFilePath}:`, err);
-            }
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
         }
-
-        this.isProcessing = false;
-        console.log("SUCCESS: All ZIP files processed!");
-
-        // Emit an event when done
-        this.emit('COMPLETE');
     }
 
-    // Extract contents of a ZIP file
-    private async extractZip(zipFilePath: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            try {
-                const zip = new AdmZip(zipFilePath);
+    async extract(zipFilePath: string): Promise<void> {
+        try {
+            const zip = new AdmZip(zipFilePath);
+            const projectRoot = path.resolve(__dirname, '../../..');
+            const outputDir = path.join(projectRoot, 'public/dragdrop_files/unzipped');
 
-                if (!fs.existsSync(this.outputDir)) {
-                    fs.mkdirSync(this.outputDir, { recursive: true });
+            // Clear previous contents (optional but useful)
+            fs.readdirSync(outputDir).forEach(file => {
+                fs.rmSync(path.join(outputDir, file), { recursive: true, force: true });
+            });
+
+            // Manually extract each file (flattening folders)
+            zip.getEntries().forEach(entry => {
+                if (!entry.isDirectory) {
+                    const fileName = path.basename(entry.entryName); // just the filename
+                    const outputPath = path.join(outputDir, fileName);
+                    fs.writeFileSync(outputPath, entry.getData());
+                    console.log(`Extracted: ${fileName}`);
                 }
+            });
 
-                zip.extractAllTo(this.outputDir, true);
-                console.log(`SUCCESS: Extracted: ${zipFilePath} to ${this.outputDir}`);
-                resolve();
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-
-    // Custom event listener for when extraction is complete
-    onComplete(callback: () => void) {
-        this.on('COMPLETE', callback);
+            console.log(`SUCCESS: Extracted ${zipFilePath} to ${outputDir} (flattened)`);
+        } catch (err) {
+            console.error(`FAILED: Error extracting ${zipFilePath}:`, err);
+            throw err;
+        }
     }
 }
