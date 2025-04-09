@@ -170,6 +170,48 @@ export default function DetailedReportPage() {
 		});
 	};
 
+	const handleDownload = () => {
+		const results = analysis?.result?.results;
+
+		const convertToCSV = (data: typeof results) => {
+			const headers = [
+			  "Gene Symbol",
+			  "Log FC",
+			  "Avg Expression",
+			  "t-Value",
+			  "p-Value",
+			  "Adjusted p-Value",
+			  "B Statistic",
+			];
+		
+			const rows = data.map((result) => [
+			  result.gene.symbol,
+			  result.logFC.toFixed(4),
+			  result.avgExpr.toFixed(4),
+			  result.tValue.toFixed(4),
+			  result.pValue.toExponential(4),
+			  result.adjustedPValue.toExponential(4),
+			  result.bStat.toFixed(4),
+			]);
+		
+			const csvContent = [headers, ...rows]
+			  .map((row) => row.join(","))
+			  .join("\n");
+		
+			return csvContent;
+		  };
+		
+		  const csvContent = convertToCSV(results);
+
+		  const timestamp = new Date().toLocaleString().replace(/[:.,]/g, "_");
+		
+		  const blob = new Blob([csvContent], { type: "text/csv" });
+		
+		  const link = document.getElementById("download-csv") as HTMLAnchorElement;
+		  link.href = URL.createObjectURL(blob);
+		  link.download = `results-${analysisId}-${timestamp}.csv`;
+	};
+
 	return (
 		<Protected>
 			<div>
@@ -267,7 +309,7 @@ export default function DetailedReportPage() {
 											<a
 												className="font-medium ml-1 pl-12 text-base group-hover:underline"
 												id="download-csv"
-												// onClick={handleDownload}
+												onClick={handleDownload}
 											>
 													Download
 											</a>
