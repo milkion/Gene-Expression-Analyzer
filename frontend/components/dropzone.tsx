@@ -12,7 +12,7 @@ import {
 	useDropzone,
 } from "@/components/ui/dropzone";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -22,22 +22,76 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { gql, useQuery } from "@apollo/client";
 
 import importIcon from "@/public/import.svg";
 import { createAnalysis } from "../../backend/src/graphql/mutation";
 import { SearchBar } from "./searchbar";
+
+const CHECK_ANALYZING = gql`
+	query CheckAnalyzing {
+		getAnalyses {
+			id
+			status
+		}
+	}
+`;
 
 export function FileDropzone() {
 	const [showDialog, setShowDialog] = useState(false);
 	const [currentFile, setCurrentFile] = useState<File | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [isAnalyzing, setIsAnalyzing] = useState(false);
 	const fileNameRef = useRef<HTMLInputElement>(null);
 	const descriptionRef = useRef<HTMLInputElement>(null);
+	const wasAnalyzingRef = useRef(false);
+
+	// Check for analyzing reports
+	const { data: analysisData, refetch } = useQuery(CHECK_ANALYZING);
+
+	// Update the analyzing state when data changes
+	useEffect(() => {
+		if (analysisData?.getAnalyses) {
+			const hasAnalyzingReport = analysisData.getAnalyses.some(
+				(analysis: any) => analysis.status === "ANALYZING"
+			);
+			setIsAnalyzing(hasAnalyzingReport);
+		}
+	}, [analysisData]);
+
+	// Add effect to refresh page when analysis completes
+	useEffect(() => {
+		// If we were analyzing before but not anymore, refresh the page
+		if (wasAnalyzingRef.current && !isAnalyzing) {
+			console.log("Analysis completed, refreshing page...");
+			window.location.reload();
+		}
+
+		// Update the ref with current state for next check
+		wasAnalyzingRef.current = isAnalyzing;
+	}, [isAnalyzing]);
+
+	// Poll for status changes every 10 seconds
+	useEffect(() => {
+		const interval = setInterval(() => {
+			refetch();
+		}, 10000);
+
+		return () => clearInterval(interval);
+	}, [refetch]);
 
 	// TODO: dropzone function to be updated when in development
 	const dropzone = useDropzone({
 		onDropFile: async (file: File) => {
+			if (isAnalyzing) {
+				return {
+					status: "error",
+					error:
+						"Analysis already in progress. Please wait until it completes.",
+				};
+			}
+
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 			setCurrentFile(file);
 			setShowDialog(true);
@@ -81,7 +135,6 @@ export function FileDropzone() {
 		}
 	};
 
-
 	const handleProcessFile = async () => {
 		if (!currentFile) return;
 
@@ -99,30 +152,39 @@ export function FileDropzone() {
 			};
 
 			const result = await createAnalysis(datasetInput);
-			console.log("Analysis created:", result);
 
 			// Trigger R script processing with the analysis ID
 			if (result && result.id) {
 				try {
 					// Updated to use the correct backend URL - make sure this matches your backend server
-					const response = await fetch('http://localhost:4000/api/process-analysis', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-						body: JSON.stringify({ analysisId: result.id }),
-					});
+					const response = await fetch(
+						"http://localhost:4000/api/process-analysis",
+						{
+							method: "POST",
+							headers: {
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify({ analysisId: result.id }),
+						}
+					);
 
 					if (!response.ok) {
 						const errorData = await response.json();
 						throw new Error(errorData.error || "Failed to process analysis");
 					}
 
-					console.log('Analysis processing started');
+					console.log("Analysis processing started");
+
+					// Refresh the analysis status
+					refetch();
 				} catch (processError) {
 					console.error("Error processing analysis:", processError);
-					setError("File uploaded but analysis processing failed: " +
-						(processError instanceof Error ? processError.message : String(processError)));
+					setError(
+						"File uploaded but analysis processing failed: " +
+							(processError instanceof Error
+								? processError.message
+								: String(processError))
+					);
 				}
 			}
 
@@ -140,22 +202,62 @@ export function FileDropzone() {
 		<div className="px-20 py-8">
 			<h2 className="text-2xl font-medium mb-4 ml-4">Dataset Upload</h2>
 			<Dropzone {...dropzone}>
-				<DropZoneArea className="min-h-[300px]">
+				<DropZoneArea
+					className={`min-h-[300px] ${
+						isAnalyzing ? "bg-gray-100 opacity-75" : ""
+					}`}
+				>
 					<DropzoneTrigger className="w-full flex flex-col items-center text-center pt-20 pb-16 gap-4 text-lg">
-						<p>Drop your dataset here, or import from your local files</p>
-						<DropzoneMessage className="mt-2 text-center">
-							Supported format: .zip
-						</DropzoneMessage>
-						<img
-							src={importIcon.src}
-							alt="File icon"
-							className="my-4 h-20 w-20"
-						/>
-						<p className="max-w-xl">
-							Please ensure that the zip file contains the expression data and
-							the phenotype data
-						</p>
-						{/* <SearchBar /> */}
+						{isAnalyzing ? (
+							<div className="font-medium p-6 rounded-xl">
+								<div className="flex items-center justify-center mb-4">
+									<svg
+										className="animate-spin -ml-1 mr-3 h-8 w-8"
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+									>
+										<circle
+											className="opacity-25"
+											cx="12"
+											cy="12"
+											r="10"
+											stroke="currentColor"
+											strokeWidth="4"
+										></circle>
+										<path
+											className="opacity-100"
+											fill="currentColor"
+											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+										></path>
+									</svg>
+								</div>
+								<p className="text-xl">Analysis in progress</p>
+								<p className="mt-3">
+									Please wait until the current analysis completes before
+									uploading a new file.
+								</p>
+								<p className="mt-5 text-sm">
+									You can view the progress in the Reports section.
+								</p>
+							</div>
+						) : (
+							<>
+								<p>Drop your dataset here, or import from your local files</p>
+								<DropzoneMessage className="mt-2 text-center">
+									Supported format: .zip
+								</DropzoneMessage>
+								<img
+									src={importIcon.src}
+									alt="File icon"
+									className="my-4 h-20 w-20"
+								/>
+								<p className="max-w-xl">
+									Please ensure that the zip file contains the expression data
+									and the phenotype data
+								</p>
+							</>
+						)}
 					</DropzoneTrigger>
 				</DropZoneArea>
 			</Dropzone>
