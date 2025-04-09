@@ -262,6 +262,22 @@ export default function DetailedReportPage() {
 									</Alert>
 
 									<div className="bg-gray-100 rounded-2xl pt-10 py-6">
+
+										<div className="group cursor-pointer mb-4" >
+											<a
+												className="font-medium ml-1 pl-12 text-base group-hover:underline"
+												id="download-csv"
+												// onClick={handleDownload}
+											>
+													Download
+											</a>
+											<img
+												src="/../download-icon.svg"
+												alt="download_icon"
+												className="ml-3 pb-2 inline-block"
+											/>
+										</div>
+										
 										<table className="w-full">
 											<thead>
 												<tr>
