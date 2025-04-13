@@ -34,6 +34,9 @@ export default function ReportsPage() {
 	const router = useRouter();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedFilter, setSelectedFilter] = useState("");
+	const [sortField, setSortField] = useState("date");
+	const [sortOrder, setSortOrder] = useState("desc");
+
 
 	// Fetch data using useQuery with polling
 	const { loading, error, data, refetch } = useQuery(GET_ANALYSES, {
@@ -51,10 +54,10 @@ export default function ReportsPage() {
 
 	const handleDelete = async (e: React.MouseEvent, reportId: string) => {
 		e.stopPropagation(); // Prevent navigation to details page
-		
+
 		if (confirm("Are you sure you want to delete this report?")) {
 			try {
-				await deleteAnalysis({ 
+				await deleteAnalysis({
 					variables: { id: reportId },
 					onCompleted: () => {
 						// Refetch the data to update the UI
@@ -85,6 +88,28 @@ export default function ReportsPage() {
 		return matchesSearch && matchesFilter;
 	});
 
+	const sortedReports = [...filteredReports].sort((a, b) => {
+		let valA, valB;
+
+		if (sortField === "dataset.name") {
+			valA = a.dataset.name.toLowerCase();
+			valB = b.dataset.name.toLowerCase();
+		} else {
+			valA = a[sortField];
+			valB = b[sortField];
+		}
+
+		if (sortField === "date") {
+			valA = new Date(Number(a.date));
+			valB = new Date(Number(b.date));
+		}
+
+		if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+		if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+		return 0;
+	});
+
+
 	return (
 		<Protected>
 			<div>
@@ -96,15 +121,43 @@ export default function ReportsPage() {
 							setSearchQuery={setSearchQuery}
 						/>
 
-						{/* <div className="ml-auto mr-8">
-						<FilterDropdown
-							selectedFilter={selectedFilter}
-							setSelectedFilter={setSelectedFilter}
-						/>
-					</div> */}
+
 					</div>
 
+
 					<div className="bg-slate-100 min-h-screen rounded-3xl py-10 px-10">
+						<div className="flex justify-end items-center mb-4 gap-4">
+							<div className="relative">
+								<select
+									className="px-4 pr-10 py-2 rounded-xl border border-gray-300 shadow-sm bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none"
+									value={sortField}
+									onChange={(e) => setSortField(e.target.value)}
+								>
+									<option value="date">Date</option>
+									<option value="status">Status</option>
+									<option value="dataset.name">Dataset Name</option>
+								</select>
+								<div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500 text-sm">
+									▾
+								</div>
+							</div>
+
+							<div className="relative">
+								<select
+									className="px-4 pr-10 py-2 rounded-xl border border-gray-300 shadow-sm bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none"
+									value={sortOrder}
+									onChange={(e) => setSortOrder(e.target.value)}
+								>
+									<option value="asc">Ascending</option>
+									<option value="desc">Descending</option>
+								</select>
+								<div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500 text-sm">
+									▾
+								</div>
+							</div>
+						</div>
+
+
 						<div className="grid grid-cols-[1fr_300px_100px] px-4 mb-2 text-gray-600">
 							<div>Report ID</div>
 							<div>Status</div>
@@ -113,18 +166,18 @@ export default function ReportsPage() {
 
 						{filteredReports.length > 0 ? (
 							<div className="space-y-3">
-								{filteredReports.map((report) => {
+								{sortedReports.map((report) => {
 									// Determine background color based on status
 									let bgColor = "bg-gray-200";
 									if (report.status === "COMPLETED") bgColor = "bg-green-200";
 									else if (report.status === "FAILED") bgColor = "bg-red-200";
 									else if (report.status === "ANALYZING") bgColor = "bg-amber-200";
-									
+
 									// Determine if report should be clickable
 									const isDisabled = report.status === "ANALYZING" || report.status === "FAILED";
 									const cursorStyle = isDisabled ? "cursor-not-allowed" : "cursor-pointer";
 									const opacity = isDisabled ? "opacity-70" : "hover:opacity-90";
-									
+
 									return (
 										<div
 											key={report.id}
@@ -138,14 +191,14 @@ export default function ReportsPage() {
 												</div>
 												{isDisabled && (
 													<div className="text-xs text-gray-600 mt-1 italic">
-														{report.status === "ANALYZING" ? 
-															"Analysis in progress - results not ready" : 
+														{report.status === "ANALYZING" ?
+															"Analysis in progress - results not ready" :
 															report.errorMessage || "Analysis failed - no results available"}
 													</div>
 												)}
 											</div>
 											<div className="font-medium">{report.status}</div>
-											<button 
+											<button
 												onClick={(e) => handleDelete(e, report.id)}
 												className="text-gray-500 justify-self-center"
 											>

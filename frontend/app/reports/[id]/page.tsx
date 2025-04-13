@@ -175,41 +175,41 @@ export default function DetailedReportPage() {
 
 		const convertToCSV = (data: typeof results) => {
 			const headers = [
-			  "Gene Symbol",
-			  "Log FC",
-			  "Avg Expression",
-			  "t-Value",
-			  "p-Value",
-			  "Adjusted p-Value",
-			  "B Statistic",
+				"Gene Symbol",
+				"Log FC",
+				"Avg Expression",
+				"t-Value",
+				"p-Value",
+				"Adjusted p-Value",
+				"B Statistic",
 			];
-		
-			const rows = data.map((result) => [
-			  result.gene.symbol,
-			  result.logFC.toFixed(4),
-			  result.avgExpr.toFixed(4),
-			  result.tValue.toFixed(4),
-			  result.pValue.toExponential(4),
-			  result.adjustedPValue.toExponential(4),
-			  result.bStat.toFixed(4),
-			]);
-		
-			const csvContent = [headers, ...rows]
-			  .map((row) => row.join(","))
-			  .join("\n");
-		
-			return csvContent;
-		  };
-		
-		  const csvContent = convertToCSV(results);
 
-		  const timestamp = new Date().toLocaleString().replace(/[:.,]/g, "_");
-		
-		  const blob = new Blob([csvContent], { type: "text/csv" });
-		
-		  const link = document.getElementById("download-csv") as HTMLAnchorElement;
-		  link.href = URL.createObjectURL(blob);
-		  link.download = `results-${analysisId}-${timestamp}.csv`;
+			const rows = data.map((result) => [
+				result.gene.symbol,
+				result.logFC.toFixed(4),
+				result.avgExpr.toFixed(4),
+				result.tValue.toFixed(4),
+				result.pValue.toExponential(4),
+				result.adjustedPValue.toExponential(4),
+				result.bStat.toFixed(4),
+			]);
+
+			const csvContent = [headers, ...rows]
+				.map((row) => row.join(","))
+				.join("\n");
+
+			return csvContent;
+		};
+
+		const csvContent = convertToCSV(results);
+
+		const timestamp = new Date().toLocaleString().replace(/[:.,]/g, "_");
+
+		const blob = new Blob([csvContent], { type: "text/csv" });
+
+		const link = document.getElementById("download-csv") as HTMLAnchorElement;
+		link.href = URL.createObjectURL(blob);
+		link.download = `results-${analysisId}-${timestamp}.csv`;
 	};
 
 	return (
@@ -222,73 +222,73 @@ export default function DetailedReportPage() {
 						<span>{">"}</span>
 						<span>{analysis?.id}</span>
 					</div>
-					
+
 					{analysis ? (
 						<div className="mt-6">
 							<AnalysisInformation analysis={analysis} />
 							<h2 className="font-medium mt-10 m-4">Analysis Overview</h2>
 							<div className="bg-gray-100 rounded-2xl pt-10 py-6 px-6 mt-6 relative">
 								<div className="grid grid-cols-3 grid-rows-2 gap-4 items-stretch justify-center relative">
-									
+
 									{/* Top Left - Statistical Significance */}
 									<div className="bg-white rounded-xl shadow-sm p-4 col-start-1 row-start-1 flex flex-col items-center justify-center text-center">
-									<h3 className="font-semibold mb-2">Statistical Significance</h3>
-									<p>
-										Lowest adjusted p-value:{" "}
-										{Number(analysis.result.results[0].adjustedPValue).toExponential(2)}
-									</p>
-									<p>
-										Indicates high confidence in these top results.
-									</p>
+										<h3 className="font-semibold mb-2">Statistical Significance</h3>
+										<p>
+											Lowest adjusted p-value:{" "}
+											{Number(analysis.result.results[0].adjustedPValue).toExponential(2)}
+										</p>
+										<p>
+											Indicates high confidence in these top results.
+										</p>
 									</div>
 									{/* Top Genes - Center */}
 									<div className="bg-white rounded-xl shadow-sm p-6 col-start-2 row-start-1 row-span-2 flex flex-col items-center justify-center text-center">
-									<h3 className="font-semibold text-md mb-4">Top Genes</h3>
-									<ul className="space-y-2">
-										{analysis.result.results.slice(0, 5).map((r: any) => (
-										<li key={r.gene.symbol} className="text-lg">
-											{r.gene.symbol}
-										</li>
-										))}
-									</ul>
+										<h3 className="font-semibold text-md mb-4">Top Genes</h3>
+										<ul className="space-y-2">
+											{analysis.result.results.slice(0, 5).map((r: any) => (
+												<li key={r.gene.symbol} className="text-lg">
+													{r.gene.symbol}
+												</li>
+											))}
+										</ul>
 									</div>
 
 									{/* Top Right - B Statistic */}
 									<div className="bg-white rounded-xl shadow-sm p-4 col-start-3 row-start-1 flex flex-col items-center justify-center text-center">
-									<h3 className="font-semibold mb-2">Confidence (B-Statistic)</h3>
-									<p>
-										Top B score:{" "}
-										{analysis.result.results[0].bStat.toFixed(2)}
-									</p>
-									<p>
-										Higher B means stronger model confidence.
-									</p>
+										<h3 className="font-semibold mb-2">Confidence (B-Statistic)</h3>
+										<p>
+											Top B score:{" "}
+											{analysis.result.results[0].bStat.toFixed(2)}
+										</p>
+										<p>
+											Higher B means stronger model confidence.
+										</p>
 									</div>
 
 									{/* Bottom Left - Average Absolute LogFC */}
 									<div className="bg-white rounded-xl shadow-sm p-4 col-start-1 row-start-2 flex flex-col items-center justify-center text-center">
-									<h3 className="font-semibold mb-2">Avg. LogFC</h3>
-									<p className="text-xl font">
-										{(
-										analysis.result.results.reduce((sum: number, r: any) => sum + Math.abs(r.logFC), 0) /
-										analysis.result.results.length
-										).toFixed(4)}
-									</p>
+										<h3 className="font-semibold mb-2">Avg. LogFC</h3>
+										<p className="text-xl font">
+											{(
+												analysis.result.results.reduce((sum: number, r: any) => sum + Math.abs(r.logFC), 0) /
+												analysis.result.results.length
+											).toFixed(4)}
+										</p>
 									</div>
 
 									{/* Bottom Right - Total Genes */}
 									<div className="bg-white rounded-xl shadow-sm p-4 col-start-3 row-start-2 flex flex-col items-center justify-center text-center">
-									<h3 className="font-semibold mb-2">Total genes:</h3>
-									<p className="text-xl font">
-										{analysis.result.results.length}
-									</p>
+										<h3 className="font-semibold mb-2">Total genes:</h3>
+										<p className="text-xl font">
+											{analysis.result.results.length}
+										</p>
 									</div>
 								</div>
-								</div>
+							</div>
 
 							{analysis.result &&
-							analysis.result.results &&
-							analysis.result.results.length > 0 ? (
+								analysis.result.results &&
+								analysis.result.results.length > 0 ? (
 								<div>
 									<h2 className="font-medium mt-10 m-4">
 										Gene Analysis Results
@@ -311,7 +311,7 @@ export default function DetailedReportPage() {
 												id="download-csv"
 												onClick={handleDownload}
 											>
-													Download
+												Download
 											</a>
 											<img
 												src="/../download-icon.svg"
@@ -319,7 +319,7 @@ export default function DetailedReportPage() {
 												className="ml-3 pb-2 inline-block"
 											/>
 										</div>
-										
+
 										<table className="w-full">
 											<thead>
 												<tr>
