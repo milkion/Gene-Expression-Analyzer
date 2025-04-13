@@ -14,6 +14,9 @@ const typeDefs = gql`
 
 		# Gets a single analysis by ID
 		analysis(id: ID!): Analysis!
+
+		# Check which analyses from a list of IDs still exist
+		checkAnalysesExist(ids: [ID!]!): [ID!]!
 	}
 
 	type Mutation {
