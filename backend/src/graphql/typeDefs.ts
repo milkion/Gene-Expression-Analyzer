@@ -97,6 +97,7 @@ const typeDefs = gql`
 		description: String
 		function: String
 		pathway: String
+		uniprotID: String
 	}
 
 	"""
@@ -139,6 +140,7 @@ const typeDefs = gql`
 	input GeneInput {
 		symbol: String!
 		description: String
+		uniprotID: String
 	}
 
 	input UserInput {

@@ -125,6 +125,7 @@ export async function runR(analysisId: string): Promise<any> {
 							gene: {
 								symbol: gene.symbol,
 								description: `${gene.symbol} description testing`,
+								uniprotID: gene.uniprotID || null,
 							},
 							logFC: gene.logFC,
 							avgExpr: gene.AveExpr,

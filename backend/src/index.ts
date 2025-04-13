@@ -12,10 +12,10 @@ import cors from "cors";
 import { expressMiddleware } from "@apollo/server/express4";
 import { processAnalysis } from "./api/processAnalysis.js";
 import path from "path";
-import multer, { Multer } from "multer";// Export runR for external use
+import multer, { Multer } from "multer"; // Export runR for external use
 export { runR } from "./utils/rScriptRunner.js";
 import jwt from "jsonwebtoken";
-
+import geneCacheRouter from "./api/geneCache.js";
 
 dotenv.config();
 
@@ -73,38 +73,50 @@ async function startServer() {
 	app.use(express.json());
 
 	// GraphQL endpoint
-	app.use('/graphql', expressMiddleware(server, {
-		context: async ({ req }) => {
-			const auth = req.headers.authorization || '';
-			if (auth.startsWith('Bearer ')) {
-				try {
-					const token = auth.substring(7);
-					const decoded = jwt.verify(token, process.env.JWT_SECRET);
-					return { userId: decoded.userId };
-				} catch (err) {
-					console.log("Invalid token:", err);
+	app.use(
+		"/graphql",
+		expressMiddleware(server, {
+			context: async ({ req }) => {
+				const auth = req.headers.authorization || "";
+				if (auth.startsWith("Bearer ")) {
+					try {
+						const token = auth.substring(7);
+						const decoded = jwt.verify(token, process.env.JWT_SECRET);
+						return { userId: decoded.userId };
+					} catch (err) {
+						console.log("Invalid token:", err);
+					}
 				}
-			}
-			return {};
-		},
-	}));
+				return {};
+			},
+		})
+	);
 
 	// API endpoint for analysis
-	app.post('/api/process-analysis', processAnalysis);
+	app.post("/api/process-analysis", processAnalysis);
 
 	// API endpoint for file upload
-	app.post('/api/upload', upload.single("file"), (req: Request, res: Response) => {
-		if (!req.file) {
-			return res.status(400).json({ error: "No file uploaded" });
+	app.post(
+		"/api/upload",
+		upload.single("file"),
+		(req: Request, res: Response) => {
+			if (!req.file) {
+				return res.status(400).json({ error: "No file uploaded" });
+			}
+			console.log("Uploaded file:", req.file);
+			res.json({ message: "File uploaded successfully", file: req.file });
 		}
-		console.log("Uploaded file:", req.file);
-		res.json({ message: "File uploaded successfully", file: req.file });
-	});
+	);
+
+	// API endpoint for gene cache
+	app.use("/api/geneCache", geneCacheRouter);
 
 	// Start the server
 	app.listen(PORT, () => {
 		console.log(`SUCCESS: Server ready at http://localhost:${PORT}/graphql`);
-		console.log(`SUCCESS: API endpoints available at http://localhost:${PORT}/api/*`);
+		console.log(
+			`SUCCESS: API endpoints available at http://localhost:${PORT}/api/*`
+		);
 	});
 }
 

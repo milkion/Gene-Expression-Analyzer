@@ -1,7 +1,7 @@
 # Ensure required packages are installed
 # Define packages
 required_packages <- c("dplyr", "tibble", "jsonlite", "httr", "readr")
-bioc_packages <- c("GEOquery", "DESeq2", "limma", "illuminaHumanv4.db")
+bioc_packages <- c("GEOquery", "DESeq2", "limma", "illuminaHumanv4.db", "org.Hs.eg.db", "AnnotationDbi")
 
 # Install BiocManager if not already installed
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -34,6 +34,8 @@ library(httr)
 library(base64enc)
 library(readr)
 library(ggplot2)
+library(org.Hs.eg.db)
+library(AnnotationDbi)
 
 # -------------------------------------------------------------------------
 
@@ -173,7 +175,6 @@ print("Extracted Probe IDs for significant genes: ")
 print(probeIDs)
 
 # Convert Probe IDs to Gene Symbols
-library(illuminaHumanv4.db)
 
 geneSymbols <- mapIds(illuminaHumanv4.db, 
                       keys = probeIDs,
@@ -185,6 +186,33 @@ significantGenes$geneSymbol <- geneSymbols
 
 # Reorder columns
 significantGenes <- significantGenes[, c("geneSymbol", setdiff(names(significantGenes), "geneSymbol"))]
+
+# Map gene symbols to UniProt IDs
+# First get Entrez IDs from gene symbols
+entrezIDs <- mapIds(org.Hs.eg.db,
+                   keys = geneSymbols,
+                   column = "ENTREZID",
+                   keytype = "SYMBOL",
+                   multiVals = "first")
+
+# Then map Entrez IDs to UniProt IDs
+uniprotIDs <- mapIds(org.Hs.eg.db,
+                    keys = entrezIDs,
+                    column = "UNIPROT",
+                    keytype = "ENTREZID",
+                    multiVals = "first")
+
+# Add UniProt IDs to the data frame
+significantGenes$uniprotID <- uniprotIDs
+
+# Print out the gene symbols and their UniProt IDs for debugging
+cat("\n=== Gene UniProt IDs ===\n")
+for (i in 1:min(20, nrow(significantGenes))) {
+  cat(sprintf("Gene: %s, UniProt ID: %s\n", 
+              significantGenes$geneSymbol[i], 
+              significantGenes$uniprotID[i] %||% "Not found"))
+}
+cat("========================\n\n")
 
 # Save results as CSV
 output_csv <- file.path(output_dir, "significantGenes.csv")
