@@ -90,7 +90,12 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 				url = `https://www.genecards.org/cgi-bin/carddisp.pl?gene=${selectedGene}`;
 				break;
 			case "uniprot":
-				url = `https://www.uniprot.org/uniprotkb/${wikiData[selectedGene].uniprotID}/entry`;
+				// Use uniprotID if available, otherwise fall back to search by gene symbol
+				if (wikiData[selectedGene]?.uniprotID) {
+					url = `https://www.uniprot.org/uniprotkb/${wikiData[selectedGene].uniprotID}/entry`;
+				} else {
+					url = `https://www.uniprot.org/uniprotkb?query=${selectedGene}&facets=model_organism%3A9606`;
+				}
 				break;
 			default:
 				return;

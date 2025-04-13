@@ -302,7 +302,10 @@ export async function POST(request: NextRequest) {
 			await fetch("http://localhost:4000/api/geneCache/save", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ geneData: newGeneData }),
+				body: JSON.stringify({ 
+					geneData: newGeneData,
+					overwriteExisting: true  // Add a flag to indicate we want to overwrite
+				}),
 			});
 		}
 

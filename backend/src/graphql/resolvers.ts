@@ -245,10 +245,23 @@ export const resolvers = {
 							if (!gene) {
 								gene = new Gene(resultData.gene);
 								await gene.save();
+							} else {
+								// Update gene if found but preserve existing data
+								gene.uniprotID = resultData.gene.uniprotID || gene.uniprotID;
+								await gene.save();
 							}
 						} else {
-							gene = new Gene(resultData.gene);
-							await gene.save();
+							// Try to find by symbol first
+							gene = await Gene.findOne({ symbol: resultData.gene.symbol });
+							if (gene) {
+								// Update with new data but preserve existing fields
+								gene.uniprotID = resultData.gene.uniprotID || gene.uniprotID;
+								await gene.save();
+							} else {
+								// Create new gene
+								gene = new Gene(resultData.gene);
+								await gene.save();
+							}
 						}
 
 						// Create result
@@ -380,21 +393,29 @@ export const resolvers = {
 			}
 		},
 		async updateAnalysisStatus(
-			_: any, 
-			{ id, status, errorMessage }: { id: string, status: "FETCHING" | "PARSING" | "ANALYZING" | "COMPLETED" | "FAILED", errorMessage?: string }
+			_: any,
+			{
+				id,
+				status,
+				errorMessage,
+			}: {
+				id: string;
+				status: "FETCHING" | "PARSING" | "ANALYZING" | "COMPLETED" | "FAILED";
+				errorMessage?: string;
+			}
 		) {
 			try {
 				const analysis = await Analysis.findById(id);
 				if (!analysis) {
 					throw new Error(`Analysis with ID ${id} not found`);
 				}
-				
+
 				analysis.status = status;
 				if (errorMessage) {
 					analysis.errorMessage = errorMessage;
 				}
 				await analysis.save();
-				
+
 				return analysis;
 			} catch (error) {
 				console.error("Error updating analysis status:", error);
