@@ -18,6 +18,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Terminal } from "lucide-react";
+import { WikipediaGeneTable } from "./WikipediaGeneTable";
 
 // Define the GraphQL Query for a single analysis
 const GET_ANALYSIS = gql`
@@ -64,8 +65,6 @@ export default function DetailedReportPage() {
 	});
 
 	const [isClient, setIsClient] = useState(false);
-	const [selectedGene, setSelectedGene] = useState<string | null>(null);
-	const [showGeneDialog, setShowGeneDialog] = useState(false);
 
 	useEffect(() => {
 		setIsClient(true);
@@ -102,49 +101,6 @@ export default function DetailedReportPage() {
 	const imageSrc = visualization_string
 		? `data:image/png;base64,${visualization_string}`
 		: null;
-
-	const handleGeneClick = (geneSymbol: string, e: React.MouseEvent) => {
-		e.preventDefault();
-		setSelectedGene(geneSymbol);
-		setShowGeneDialog(true);
-	};
-
-	const navigateToGeneResource = (resource: string) => {
-		if (!selectedGene) return;
-
-		let url = "";
-		switch (resource) {
-			case "genecards":
-				url = `https://www.genecards.org/cgi-bin/carddisp.pl?gene=${selectedGene}`;
-				break;
-			case "uniprot":
-				url = `https://www.uniprot.org/uniprotkb?query=${selectedGene}&facets=model_organism%3A9606`;
-				break;
-			default:
-				return;
-		}
-
-		window.open(url, "_blank", "noopener,noreferrer");
-		setShowGeneDialog(false);
-	};
-
-	const copyGeneSymbols = () => {
-		if (!analysis?.result?.results) return;
-
-		const geneSymbols = analysis.result.results
-			.map((result) => result.gene.symbol)
-			.join("\n");
-
-		navigator.clipboard
-			.writeText(geneSymbols)
-			.then(() => {
-				alert("All gene symbols have been copied to your clipboard.");
-			})
-			.catch((err) => {
-				console.error("Failed to copy: ", err);
-				alert("Failed to copy gene symbols. Please try again.");
-			});
-	};
 
 	const handleSort = (field: string) => {
 		if (sortField === field) {
@@ -229,17 +185,18 @@ export default function DetailedReportPage() {
 							<h2 className="font-medium mt-10 m-4">Analysis Overview</h2>
 							<div className="bg-gray-100 rounded-2xl pt-10 py-6 px-6 mt-6 relative">
 								<div className="grid grid-cols-3 grid-rows-2 gap-4 items-stretch justify-center relative">
-
 									{/* Top Left - Statistical Significance */}
 									<div className="bg-white rounded-xl shadow-sm p-4 col-start-1 row-start-1 flex flex-col items-center justify-center text-center">
-										<h3 className="font-semibold mb-2">Statistical Significance</h3>
+										<h3 className="font-semibold mb-2">
+											Statistical Significance
+										</h3>
 										<p>
 											Lowest adjusted p-value:{" "}
-											{Number(analysis.result.results[0].adjustedPValue).toExponential(2)}
+											{Number(
+												analysis.result.results[0].adjustedPValue
+											).toExponential(2)}
 										</p>
-										<p>
-											Indicates high confidence in these top results.
-										</p>
+										<p>Indicates high confidence in these top results.</p>
 									</div>
 									{/* Top Genes - Center */}
 									<div className="bg-white rounded-xl shadow-sm p-6 col-start-2 row-start-1 row-span-2 flex flex-col items-center justify-center text-center">
@@ -255,14 +212,13 @@ export default function DetailedReportPage() {
 
 									{/* Top Right - B Statistic */}
 									<div className="bg-white rounded-xl shadow-sm p-4 col-start-3 row-start-1 flex flex-col items-center justify-center text-center">
-										<h3 className="font-semibold mb-2">Confidence (B-Statistic)</h3>
+										<h3 className="font-semibold mb-2">
+											Confidence (B-Statistic)
+										</h3>
 										<p>
-											Top B score:{" "}
-											{analysis.result.results[0].bStat.toFixed(2)}
+											Top B score: {analysis.result.results[0].bStat.toFixed(2)}
 										</p>
-										<p>
-											Higher B means stronger model confidence.
-										</p>
+										<p>Higher B means stronger model confidence.</p>
 									</div>
 
 									{/* Bottom Left - Average Absolute LogFC */}
@@ -270,8 +226,10 @@ export default function DetailedReportPage() {
 										<h3 className="font-semibold mb-2">Avg. LogFC</h3>
 										<p className="text-xl font">
 											{(
-												analysis.result.results.reduce((sum: number, r: any) => sum + Math.abs(r.logFC), 0) /
-												analysis.result.results.length
+												analysis.result.results.reduce(
+													(sum: number, r: any) => sum + Math.abs(r.logFC),
+													0
+												) / analysis.result.results.length
 											).toFixed(4)}
 										</p>
 									</div>
@@ -293,19 +251,9 @@ export default function DetailedReportPage() {
 									<h2 className="font-medium mt-10 m-4">
 										Gene Analysis Results
 									</h2>
-									<Alert className="bg-blue-100 rounded-2xl mb-4">
-										<Terminal className="h-4 w-4" />
-										<AlertTitle className="text-blue-800 font-lg">
-											Heads up!
-										</AlertTitle>
-										<AlertDescription>
-											Click on a gene symbol to view more information about it.
-										</AlertDescription>
-									</Alert>
 
 									<div className="bg-gray-100 rounded-2xl pt-10 py-6">
-
-										<div className="group cursor-pointer mb-4" >
+										<div className="group cursor-pointer mb-4">
 											<a
 												className="font-medium ml-1 pl-12 text-base group-hover:underline"
 												id="download-csv"
@@ -358,15 +306,7 @@ export default function DetailedReportPage() {
 												{getSortedResults()?.map((result) => (
 													<tr key={result.id} className="hover:bg-gray-50">
 														<td className="py-2 text-center">
-															<button
-																onClick={(e) =>
-																	handleGeneClick(result.gene.symbol, e)
-																}
-																className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-																title={`Find more information about ${result.gene.symbol}`}
-															>
-																{result.gene.symbol}
-															</button>
+															{result.gene.symbol}
 														</td>
 														<td className="p-2 text-center">
 															{result.logFC.toFixed(4)}
@@ -392,37 +332,11 @@ export default function DetailedReportPage() {
 										</table>
 									</div>
 
-									<div className="mt-6 bg-violet-200 rounded-2xl p-6 relative">
-										<h3 className="text-md">Batch Query Gene Symbols</h3>
-
-										<p className="text-sm text-gray-600 mt-2 max-w-3xl">
-											Use the button below to copy all gene symbols to your
-											clipboard. You can paste these genes directly into
-											<a
-												href="https://ctdbase.org/tools/batchQuery.go"
-												target="_blank"
-												rel="noopener noreferrer"
-												className="text-blue-600 hover:underline"
-											>
-												{" "}
-												CTD Batch Query
-											</a>{" "}
-											to batch query gene information.
-										</p>
-
-										<Button
-											onClick={copyGeneSymbols}
-											className="bg-blue-600 hover:bg-blue-700 text-white absolute bottom-6 right-6"
-										>
-											Copy All Gene Symbols
-										</Button>
-									</div>
-
 									{imageSrc ? (
 										<div>
-											<h2 className="font-medium mt-10 m-4">Visualizations</h2>
+											<h2 className="font-medium mt-10 m-4">Visualization</h2>
 											<div className="bg-gray-100 rounded-2xl py-10 px-10">
-												<h2 className="font-medium m-4">Graphs</h2>
+												<h2 className="font-medium m-4">Volcano Plot</h2>
 												<div className="bg-white rounded-2xl py-10 px-10 flex justify-center items-center">
 													<img
 														id="base64-image"
@@ -437,6 +351,34 @@ export default function DetailedReportPage() {
 									) : (
 										<></>
 									)}
+
+									{/* Wikipedia Gene Information Section */}
+									<div>
+										<h2 className="font-medium mt-10 m-4">Gene Encyclopedia</h2>
+										<p className="text-gray-700 m-4">
+											The gene information displayed below is sourced from Wikipedia and may not always be accurate or up-to-date. 
+											Wikipedia content is community-edited and should be used as a starting point for research only. We recommend 
+											cross-checking any critical information with authoritative scientific databases or literature.
+										</p>
+										<Alert className="bg-blue-100 rounded-2xl mb-4">
+											<Terminal className="h-4 w-4" />
+											<AlertTitle className="text-blue-800 font-lg">
+												Heads up!
+											</AlertTitle>
+											<AlertDescription>
+												Click on a gene symbol to view more information about
+												it.
+											</AlertDescription>
+										</Alert>
+
+										<div className="bg-gray-100 rounded-2xl pt-10 py-6">
+											<WikipediaGeneTable
+												genes={analysis.result.results.map(
+													(r) => r.gene.symbol
+												)}
+											/>
+										</div>
+									</div>
 								</div>
 							) : (
 								<p>No analysis results available.</p>
@@ -446,40 +388,6 @@ export default function DetailedReportPage() {
 						<p>Analysis not found</p>
 					)}
 				</div>
-
-				{/* Gene Information Dialog */}
-				<Dialog open={showGeneDialog} onOpenChange={setShowGeneDialog}>
-					<DialogContent className="sm:max-w-[425px]">
-						<DialogHeader>
-							<DialogTitle>Gene Information: {selectedGene}</DialogTitle>
-							<DialogDescription>
-								Choose where you want to view information about this gene.
-							</DialogDescription>
-						</DialogHeader>
-						<div className="grid gap-4 py-4">
-							<Button
-								onClick={() => navigateToGeneResource("genecards")}
-								className="w-full"
-							>
-								GeneCards
-							</Button>
-							<Button
-								onClick={() => navigateToGeneResource("uniprot")}
-								className="w-full"
-							>
-								UniProt
-							</Button>
-						</div>
-						<DialogFooter>
-							<Button
-								variant="outline"
-								onClick={() => setShowGeneDialog(false)}
-							>
-								Cancel
-							</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
 			</div>
 		</Protected>
 	);

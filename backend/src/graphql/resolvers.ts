@@ -154,6 +154,15 @@ export const resolvers = {
 				throw new Error("Failed to fetch user: Unknown error");
 			}
 		},
+		async checkAnalysesExist(_: any, { ids }: { ids: string[] }): Promise<string[]> {
+			try {
+				const existingAnalyses = await Analysis.find({ _id: { $in: ids } }).select('_id');
+				return existingAnalyses.map(analysis => analysis._id.toString());
+			} catch (error) {
+				console.error("Error checking analyses existence:", error);
+				throw new Error(`Failed to check analyses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+			}
+		},
 	},
 	Mutation: {
 		async createAnalysis(
@@ -193,32 +202,23 @@ export const resolvers = {
 				throw new Error("Failed to create analysis: Unknown error");
 			}
 		},
-		async deleteAnalysis(
-			_: ResolverParent,
-			{ id }: DeleteAnalysisArgs
-		): Promise<boolean> {
+		async deleteAnalysis(_, { id }) {
 			try {
-				// Find the analysis to get associated results
+				// Find the analysis first
 				const analysis = await Analysis.findById(id);
 
 				if (!analysis) {
 					throw new Error(`Analysis with ID ${id} not found`);
 				}
 
-				// Delete associated results
-				if (analysis.results && analysis.results.length > 0) {
-					await Result.deleteMany({ _id: { $in: analysis.results } });
-				}
+				// Using findByIdAndDelete won't trigger the middleware
+				// So we need to use findById + deleteOne instead
+				await analysis.deleteOne();
 
-				// Delete the analysis itself
-				const deleteResult = await Analysis.findByIdAndDelete(id);
-
-				return !!deleteResult; // Return true if deletion was successful
-			} catch (error: unknown) {
-				if (error instanceof Error) {
-					throw new Error(`Failed to delete analysis: ${error.message}`);
-				}
-				throw new Error("Failed to delete analysis: Unknown error");
+				return true; // Return boolean instead of object
+			} catch (error) {
+				console.error("Error deleting analysis:", error);
+				throw new Error(`Failed to delete analysis: ${error.message}`);
 			}
 		},
 		async updateAnalysisWithResults(
@@ -245,10 +245,23 @@ export const resolvers = {
 							if (!gene) {
 								gene = new Gene(resultData.gene);
 								await gene.save();
+							} else {
+								// Update gene if found but preserve existing data
+								gene.uniprotID = resultData.gene.uniprotID || gene.uniprotID;
+								await gene.save();
 							}
 						} else {
-							gene = new Gene(resultData.gene);
-							await gene.save();
+							// Try to find by symbol first
+							gene = await Gene.findOne({ symbol: resultData.gene.symbol });
+							if (gene) {
+								// Update with new data but preserve existing fields
+								gene.uniprotID = resultData.gene.uniprotID || gene.uniprotID;
+								await gene.save();
+							} else {
+								// Create new gene
+								gene = new Gene(resultData.gene);
+								await gene.save();
+							}
 						}
 
 						// Create result
@@ -380,21 +393,29 @@ export const resolvers = {
 			}
 		},
 		async updateAnalysisStatus(
-			_: any, 
-			{ id, status, errorMessage }: { id: string, status: "FETCHING" | "PARSING" | "ANALYZING" | "COMPLETED" | "FAILED", errorMessage?: string }
+			_: any,
+			{
+				id,
+				status,
+				errorMessage,
+			}: {
+				id: string;
+				status: "FETCHING" | "PARSING" | "ANALYZING" | "COMPLETED" | "FAILED";
+				errorMessage?: string;
+			}
 		) {
 			try {
 				const analysis = await Analysis.findById(id);
 				if (!analysis) {
 					throw new Error(`Analysis with ID ${id} not found`);
 				}
-				
+
 				analysis.status = status;
 				if (errorMessage) {
 					analysis.errorMessage = errorMessage;
 				}
 				await analysis.save();
-				
+
 				return analysis;
 			} catch (error) {
 				console.error("Error updating analysis status:", error);

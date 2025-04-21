@@ -1,7 +1,7 @@
 # Ensure required packages are installed
 # Define packages
 required_packages <- c("dplyr", "tibble", "jsonlite", "httr", "readr")
-bioc_packages <- c("GEOquery", "DESeq2", "limma", "illuminaHumanv4.db")
+bioc_packages <- c("GEOquery", "DESeq2", "limma", "illuminaHumanv4.db", "org.Hs.eg.db", "AnnotationDbi", "biomaRt")
 
 # Install BiocManager if not already installed
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -34,6 +34,9 @@ library(httr)
 library(base64enc)
 library(readr)
 library(ggplot2)
+library(org.Hs.eg.db)
+library(AnnotationDbi)
+library(biomaRt)
 
 # -------------------------------------------------------------------------
 
@@ -173,7 +176,6 @@ print("Extracted Probe IDs for significant genes: ")
 print(probeIDs)
 
 # Convert Probe IDs to Gene Symbols
-library(illuminaHumanv4.db)
 
 geneSymbols <- mapIds(illuminaHumanv4.db, 
                       keys = probeIDs,
@@ -185,6 +187,37 @@ significantGenes$geneSymbol <- geneSymbols
 
 # Reorder columns
 significantGenes <- significantGenes[, c("geneSymbol", setdiff(names(significantGenes), "geneSymbol"))]
+
+# Map gene symbols to UniProt IDs using biomaRt
+# Connect to Ensembl BioMart
+ensembl <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+
+# Get the correct attribute names for UniProt IDs
+# Uncomment to check available attributes
+# attr <- listAttributes(ensembl)
+# print(attr[grep("uniprot", attr$name, ignore.case=TRUE),])
+
+# Fetch UniProt IDs for the significant gene symbols
+mart_results <- getBM(
+  attributes = c("hgnc_symbol", "uniprotswissprot", "uniprotsptrembl"),
+  filters = "hgnc_symbol",
+  values = geneSymbols,
+  mart = ensembl
+)
+
+# Process the results to get a single UniProt ID per gene
+# Prioritize SwissProt (reviewed) over TrEMBL (unreviewed) entries
+mart_results$uniprot <- ifelse(
+  !is.na(mart_results$uniprotswissprot) & mart_results$uniprotswissprot != "",
+  mart_results$uniprotswissprot,
+  mart_results$uniprotsptrembl
+)
+
+# Create a named vector for easier mapping
+uniprot_map <- setNames(mart_results$uniprot, mart_results$hgnc_symbol)
+
+# Add UniProt IDs to the data frame
+significantGenes$uniprotID <- uniprot_map[significantGenes$geneSymbol]
 
 # Save results as CSV
 output_csv <- file.path(output_dir, "significantGenes.csv")

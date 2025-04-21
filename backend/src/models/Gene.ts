@@ -19,6 +19,18 @@ const geneSchema = new Schema({
 		type: String,
 		required: false,
 	},
+	uniprotID: {
+		type: String,
+		required: false,
+	},
+	imageUrl: {
+		type: String,
+		required: false,
+	},
+	lastUpdated: {
+		type: Date,
+		default: Date.now,
+	},
 });
 
 // Create text indexes for searching
