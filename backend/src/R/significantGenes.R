@@ -22,6 +22,11 @@ for (pkg in bioc_packages) {
   }
 }
 
+if (!requireNamespace("ggrepel", quietly = TRUE)) {
+  install.packages("ggrepel")
+}
+
+
 # Load libraries
 library(GEOquery)
 library(DESeq2)
@@ -37,7 +42,7 @@ library(ggplot2)
 library(org.Hs.eg.db)
 library(AnnotationDbi)
 library(biomaRt)
-
+library(ggrepel)
 # -------------------------------------------------------------------------
 
 # Define directories
@@ -141,15 +146,32 @@ png_file <- file.path(output_dir, "volcano_plot.png")
 # Open the PNG device
 png(png_file, width = 800, height = 600)
 
+# Subset results for significant genes with symbols
+results$probeID <- rownames(results)
+results$geneSymbol <- mapIds(illuminaHumanv4.db, 
+                             keys = results$probeID,
+                             column = "SYMBOL",
+                             keytype = "PROBEID",
+                             multiVals = "first")
+
+sig_results <- subset(results, adj.P.Val < 0.05 & abs(logFC) > 1 & !is.na(geneSymbol))
+
+# Plot
 volcano_plot <- ggplot(results, aes(x = logFC, y = -log10(adj.P.Val))) +
   geom_point(aes(color = adj.P.Val < 0.05 & abs(logFC) > 1), alpha = 0.6) +
   scale_color_manual(values = c("black", "red")) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "blue") +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "blue") +
+  theme_minimal() +
   labs(title = "Volcano Plot",
        x = "Log2 Fold Change",
        y = "-Log10 Adjusted P-value") +
-  theme_minimal() +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "blue") +
-  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "blue")
+  geom_text_repel(data = sig_results,
+                  aes(label = geneSymbol),
+                  size = 3,
+                  max.overlaps = 20,
+                  box.padding = 0.3,
+                  point.padding = 0.2)
 
 #Red dots - genes significantly differential expressed, fold change > 1
 volcano_plot
