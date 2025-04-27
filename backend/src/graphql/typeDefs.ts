@@ -14,6 +14,9 @@ const typeDefs = gql`
 
 		# Gets a single analysis by ID
 		analysis(id: ID!): Analysis!
+
+		# Check which analyses from a list of IDs still exist
+		checkAnalysesExist(ids: [ID!]!): [ID!]!
 	}
 
 	type Mutation {
@@ -97,6 +100,7 @@ const typeDefs = gql`
 		description: String
 		function: String
 		pathway: String
+		uniprotID: String
 	}
 
 	"""
@@ -139,6 +143,7 @@ const typeDefs = gql`
 	input GeneInput {
 		symbol: String!
 		description: String
+		uniprotID: String
 	}
 
 	input UserInput {

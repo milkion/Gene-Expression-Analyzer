@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { gql, useQuery } from "@apollo/client";
+
+// Query to check which analyses exist
+const CHECK_ANALYSES_EXIST = gql`
+	query CheckAnalysesExist($ids: [ID!]!) {
+		checkAnalysesExist(ids: $ids)
+	}
+`;
 
 interface HistoryItem {
 	id: string;
@@ -13,23 +21,48 @@ interface HistoryItem {
 export function QuickHistory() {
 	const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
 	const router = useRouter();
-
-	useEffect(() => {
-		// Load history from localStorage when component mounts
-		const loadHistory = () => {
-			const savedHistory = localStorage.getItem("viewedReports");
-			if (savedHistory) {
-				try {
-					const parsedHistory = JSON.parse(savedHistory);
-					setHistoryItems(parsedHistory.slice(0, 5)); // Only show the 5 most recent
-				} catch (error) {
-					console.error("Error parsing history:", error);
-				}
+	
+	// Get all analysis IDs from history
+	const loadHistory = () => {
+		const savedHistory = localStorage.getItem("viewedReports");
+		if (savedHistory) {
+			try {
+				const parsedHistory = JSON.parse(savedHistory);
+				return parsedHistory.slice(0, 10); // Load more than we need in case some are deleted
+			} catch (error) {
+				console.error("Error parsing history:", error);
+				return [];
 			}
-		};
-
-		loadHistory();
-	}, []);
+		}
+		return [];
+	};
+	
+	const initialHistory = loadHistory();
+	const historyIds = initialHistory.map(item => item.id);
+	
+	// Query to check which analyses still exist
+	const { data, loading } = useQuery(CHECK_ANALYSES_EXIST, {
+		variables: { ids: historyIds },
+		skip: historyIds.length === 0,
+		fetchPolicy: "network-only" // Always check the server
+	});
+	
+	useEffect(() => {
+		if (data && data.checkAnalysesExist) {
+			// Filter history to only include existing analyses
+			const existingIds = new Set(data.checkAnalysesExist);
+			const filteredHistory = initialHistory.filter(item => existingIds.has(item.id));
+			
+			// Update localStorage with the filtered history
+			localStorage.setItem("viewedReports", JSON.stringify(filteredHistory));
+			
+			// Show only the 5 most recent
+			setHistoryItems(filteredHistory.slice(0, 5));
+		} else if (initialHistory.length > 0 && !loading) {
+			// If query failed or returned no data but we have history items
+			setHistoryItems(initialHistory.slice(0, 5));
+		}
+	}, [data, loading]);
 
 	const handleRowClick = (id: string) => {
 		router.push(`/reports/${id}`);
