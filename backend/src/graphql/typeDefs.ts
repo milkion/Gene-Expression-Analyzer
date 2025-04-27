@@ -32,7 +32,11 @@ const typeDefs = gql`
 		# Deletes an analysis by ID
 		deleteAnalysis(id: ID!): Boolean!
 
-		updateAnalysisStatus(id: ID!, status: AnalysisStatus!, errorMessage: String): Analysis!
+		updateAnalysisStatus(
+			id: ID!
+			status: AnalysisStatus!
+			errorMessage: String
+		): Analysis!
 
 		# Logs in a user and returns a token
 		login(email: String!, password: String!): AuthPayload!
@@ -69,6 +73,7 @@ const typeDefs = gql`
 		result: AnalysisResult
 		createdAt: String!
 		updatedAt: String!
+		user: User!
 	}
 
 	"""

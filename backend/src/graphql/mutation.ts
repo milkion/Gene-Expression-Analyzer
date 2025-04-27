@@ -5,6 +5,7 @@ import {
 	HttpLink,
 } from "@apollo/client/core/index.js";
 import fetch from "cross-fetch";
+import { setContext } from "@apollo/client/link/context/index.js";
 
 export const client = new ApolloClient({
 	link: new HttpLink({ uri: "http://localhost:4000/graphql", fetch }),
@@ -51,12 +52,32 @@ const CREATE_ANALYSIS_MUTATION = gql`
 	}
 `;
 
-export async function updateAnalysis(id, results) {
+// Helper to create an Apollo client with a token
+function getClient(token) {
+	const httpLink = new HttpLink({
+		uri: "http://localhost:4000/graphql",
+		fetch,
+	});
+	const authLink = setContext((_, { headers }) => ({
+		headers: {
+			...headers,
+			authorization: token ? `Bearer ${token}` : "",
+		},
+	}));
+	return new ApolloClient({
+		link: authLink.concat(httpLink),
+		cache: new InMemoryCache(),
+	});
+}
+
+export async function updateAnalysis(id, results, token) {
 	try {
 		console.log(
 			"Received data in updateAnalysis:",
 			JSON.stringify(results, null, 2)
 		);
+
+		const client = getClient(token);
 
 		const response = await client.mutate({
 			mutation: UPDATE_ANALYSIS_MUTATION,
@@ -73,21 +94,24 @@ export async function updateAnalysis(id, results) {
 
 export async function createAnalysis(datasetInput) {
 	try {
-		console.log(
-			"Creating analysis with dataset:",
-			JSON.stringify(datasetInput, null, 2)
-		);
-
+		// Get the token from localStorage
+		const token = localStorage.getItem("token");
+		
+		console.log("Token in createAnalysis:", localStorage.getItem("token"));
+		
+		// Use the authenticated client
+		const client = getClient(token);
+		
 		const response = await client.mutate({
 			mutation: CREATE_ANALYSIS_MUTATION,
 			variables: { datasetInput },
 		});
-
+		
 		return response.data.createAnalysis;
 	} catch (error) {
 		console.error("GraphQL Errors:", error.graphQLErrors);
 		console.error("Network Errors:", error.networkError);
 		console.error("Full Error Object:", error);
-		throw error; // Re-throw the error for the caller to handle
+		throw error; // Re-throw to handle in the component
 	}
 }

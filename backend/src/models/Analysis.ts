@@ -43,6 +43,11 @@ const analysisSchema = new Schema(
 		updatedAt: {
 			type: Date,
 		},
+		user: {
+			type: Schema.Types.ObjectId,
+			ref: "User",
+			required: true,
+		},
 	},
 	{
 		timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },

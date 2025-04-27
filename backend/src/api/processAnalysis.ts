@@ -3,16 +3,14 @@ import { runR } from "../utils/rScriptRunner.js";
 export async function processAnalysis(req, res) {
 	try {
 		const { analysisId } = req.body;
+		const token = req.headers.authorization?.split(" ")[1]; // Extract token
 
 		if (!analysisId) {
 			return res.status(400).json({ error: "Analysis ID is required" });
 		}
 
 		// Start R script processing in the background
-		runR(analysisId)
-			.then(() => {
-				console.log(`Analysis ${analysisId} processed successfully`);
-			})
+		runR(analysisId, token)
 			.catch((error) => {
 				console.error(`Error processing analysis ${analysisId}:`, error);
 			});

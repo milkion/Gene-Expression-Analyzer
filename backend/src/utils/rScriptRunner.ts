@@ -44,7 +44,7 @@ async function preprocessFiles(): Promise<void> {
 	console.log("SUCCESS: ZIP extraction complete.");
 }
 
-export async function runR(analysisId: string): Promise<any> {
+export async function runR(analysisId: string, token: string): Promise<any> {
 	try {
 		// Set initial status to ANALYZING (we skip FETCHING and PARSING for simplicity)
 		await updateAnalysisStatus(analysisId, "ANALYZING");
@@ -141,7 +141,7 @@ export async function runR(analysisId: string): Promise<any> {
 								visualization: data.volcanoPlotBase64,
 							},
 						};
-						await updateAnalysis(analysisId, updatePayload.results);
+						await updateAnalysis(analysisId, updatePayload.results, token);
 						
 						// Update status to COMPLETED only after successfully updating the results
 						await updateAnalysisStatus(analysisId, "COMPLETED");

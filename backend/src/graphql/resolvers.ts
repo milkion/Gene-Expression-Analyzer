@@ -82,9 +82,14 @@ export interface ResponseData {
 // Tell Apollo server how we should fetch data associated with each type
 export const resolvers = {
 	Query: {
-		async getAnalyses(): Promise<any[]> {
+		async getAnalyses(_: any, __: any, context): Promise<any[]> {
 			try {
-				return await Analysis.find().populate("dataset").populate("results");
+				if (!context.userId) {
+					throw new Error("Not authenticated");
+				}
+				return await Analysis.find({ user: context.userId })
+					.populate("dataset")
+					.populate("results");
 			} catch (error: unknown) {
 				if (error instanceof Error) {
 					throw new Error(`Failed to fetch analyses: ${error.message}`);
@@ -154,22 +159,35 @@ export const resolvers = {
 				throw new Error("Failed to fetch user: Unknown error");
 			}
 		},
-		async checkAnalysesExist(_: any, { ids }: { ids: string[] }): Promise<string[]> {
+		async checkAnalysesExist(
+			_: any,
+			{ ids }: { ids: string[] }
+		): Promise<string[]> {
 			try {
-				const existingAnalyses = await Analysis.find({ _id: { $in: ids } }).select('_id');
-				return existingAnalyses.map(analysis => analysis._id.toString());
+				const existingAnalyses = await Analysis.find({
+					_id: { $in: ids },
+				}).select("_id");
+				return existingAnalyses.map((analysis) => analysis._id.toString());
 			} catch (error) {
 				console.error("Error checking analyses existence:", error);
-				throw new Error(`Failed to check analyses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+				throw new Error(
+					`Failed to check analyses: ${
+						error instanceof Error ? error.message : "Unknown error"
+					}`
+				);
 			}
 		},
 	},
 	Mutation: {
 		async createAnalysis(
 			_: ResolverParent,
-			{ datasetInput: { name, description, size } }: CreateAnalysisArgs
+			{ datasetInput: { name, description, size } }: CreateAnalysisArgs,
+			context
 		): Promise<any> {
 			try {
+				if (!context.userId) {
+					throw new Error("Not authenticated");
+				}
 				// Create a new dataset
 				const dataset = new Dataset({
 					name: name,
@@ -180,11 +198,12 @@ export const resolvers = {
 
 				const savedDataset = await dataset.save();
 
-				// Create a new analysis linked to this dataset
+				// Create a new analysis linked to this dataset and user
 				const analysis = new Analysis({
 					date: new Date(),
 					status: "ANALYZING", // Initial status
 					dataset: savedDataset._id,
+					user: context.userId,
 					results: [],
 					visualization: null,
 				});
@@ -193,6 +212,7 @@ export const resolvers = {
 
 				// Populate the dataset field for the response
 				await savedAnalysis.populate("dataset");
+				await savedAnalysis.populate("user");
 
 				return savedAnalysis;
 			} catch (error: unknown) {
@@ -470,6 +490,12 @@ export const resolvers = {
 				}
 				throw new Error("Failed to fetch dataset: Unknown error");
 			}
+		},
+		async user(parent: any): Promise<any> {
+			if (parent.user instanceof mongoose.Types.ObjectId) {
+				return await User.findById(parent.user);
+			}
+			return parent.user;
 		},
 	},
 	Result: {
