@@ -2,11 +2,9 @@ import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { typeDefs } from "./graphql/typeDefs.js";
 import { resolvers } from "./graphql/resolvers.js";
-import { ResponseData } from "./graphql/resolvers.js";
-import fs from "fs";
+
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import { authenticateUser } from "./models/middleware/authMiddleware.js";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { expressMiddleware } from "@apollo/server/express4";

@@ -339,12 +339,10 @@ export const resolvers = {
 					throw new Error("Email already exists");
 				}
 
-				const hashedPassword = await bcrypt.hash(userInput.password, 10);
-
 				const newUser = new User({
 					name: userInput.name,
 					email: userInput.email,
-					password: hashedPassword, // Fixed: Use hashed password
+					password: userInput.password, // Use raw password, let middleware handle hashing
 				});
 
 				const savedUser = await newUser.save();
