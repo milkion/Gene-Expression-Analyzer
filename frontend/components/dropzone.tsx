@@ -280,7 +280,7 @@ export function FileDropzone() {
 									/>
 								</p>
 								<p>
-									<strong>File Description:</strong>{" "}
+									<strong>File Keywords:</strong>{" "}
 									<input
 										ref={descriptionRef}
 										className="w-full border rounded-md p-2"
