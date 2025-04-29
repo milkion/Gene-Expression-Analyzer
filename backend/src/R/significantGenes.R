@@ -150,14 +150,11 @@ png_file <- file.path(output_dir, "volcano_plot.png")
 png(png_file, width = 800, height = 600)
 
 # Subset results for significant genes with symbols
-results$probeID <- rownames(results)
-results$geneSymbol <- mapIds(illuminaHumanv4.db, 
-                             keys = results$probeID,
-                             column = "SYMBOL",
-                             keytype = "PROBEID",
-                             multiVals = "first")
+# Assume the rownames of results are gene symbols (already present from your expression matrix)
+results$geneSymbol <- rownames(results)
 
-sig_results <- subset(results, adj.P.Val < 0.05 & abs(logFC) > 1 & !is.na(geneSymbol))
+# Subset significant results based on adjusted p-value and log fold change
+sig_results <- subset(results, adj.P.Val < 0.05 & abs(logFC) > 1)
 
 # Plot
 volcano_plot <- ggplot(results, aes(x = logFC, y = -log10(adj.P.Val))) +
