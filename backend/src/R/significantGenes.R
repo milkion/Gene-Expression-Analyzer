@@ -93,14 +93,17 @@ print(head(phenotypeData))
 print("---------------------------------------")
 
 # Ensure probeID is a character vector and store it before converting
-probeID <- as.character(expressionData[[1]])
+geneSymbols <- as.character(expressionData[[1]])
 
 # Convert tibble to a numeric matrix for analysis
 expressionData <- as.matrix(expressionData[,-1])  # Remove the first column (probe IDs) and convert to matrix
 mode(expressionData) <- "numeric"  # Ensure numeric type
 
+# Handle duplicate and NA gene symbols
+uniqueGeneSymbols <- make.unique(ifelse(is.na(geneSymbols), "NA", geneSymbols))
+
 # Assign row names
-rownames(expressionData) <- probeID
+rownames(expressionData) <- uniqueGeneSymbols
 
 # Verify row names
 cat("Row names after assignment:\n")
@@ -134,11 +137,11 @@ results <- topTable(fit, coef = 2, number = Inf)
 
 print(head(results))
 
-# Map correct ILMN probe IDs
-results$probeID <- rownames(expressionData)[as.numeric(rownames(results))]
+# Map correct gene symbols
+results$geneSymbol <- rownames(results)
 
 # Verify output
-head(results[, c("probeID", "logFC", "adj.P.Val")])
+head(results[, c("geneSymbol", "logFC", "adj.P.Val")])
 
 # Define the PNG output file
 png_file <- file.path(output_dir, "volcano_plot.png")
@@ -191,21 +194,21 @@ significantGenes <- significantGenes[order(significantGenes$adj.P.Val), ]
 
 paste("Number of significant genes:", nrow(significantGenes))
 
-significantGenes$probeID <- rownames(significantGenes)
-probeIDs <- significantGenes$probeID
+# significantGenes$probeID <- rownames(significantGenes)
+# probeIDs <- significantGenes$probeID
 
-print("Extracted Probe IDs for significant genes: ")
-print(probeIDs)
+# print("Extracted Probe IDs for significant genes: ")
+# print(probeIDs)
 
 # Convert Probe IDs to Gene Symbols
 
-geneSymbols <- mapIds(illuminaHumanv4.db, 
-                      keys = probeIDs,
-                      column = "SYMBOL",
-                      keytype = "PROBEID",
-                      multiVals = "first")
+# geneSymbols <- mapIds(illuminaHumanv4.db, 
+#                       keys = probeIDs,
+#                       column = "SYMBOL",
+#                       keytype = "PROBEID",
+#                       multiVals = "first")
 
-significantGenes$geneSymbol <- geneSymbols
+# significantGenes$geneSymbol <- geneSymbols
 
 # Reorder columns
 significantGenes <- significantGenes[, c("geneSymbol", setdiff(names(significantGenes), "geneSymbol"))]
