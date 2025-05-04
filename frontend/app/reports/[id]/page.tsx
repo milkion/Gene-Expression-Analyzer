@@ -168,6 +168,11 @@ export default function DetailedReportPage() {
 		link.download = `results-${analysisId}-${timestamp}.csv`;
 	};
 
+	const parseKeywords = (keywords: string | null) => {
+		if (!keywords) return "";
+		return keywords.replace(/[\s,]+/g, '+') + "+";
+	}
+
 	return (
 		<Protected>
 			<div>
@@ -300,6 +305,7 @@ export default function DetailedReportPage() {
 															</div>
 														</th>
 													))}
+													<th className="py-2">PubMed Link</th>
 												</tr>
 											</thead>
 											<tbody>
@@ -325,6 +331,17 @@ export default function DetailedReportPage() {
 														</td>
 														<td className="p-2 text-center">
 															{result.bStat.toFixed(4)}
+														</td>
+														<td className="p-2 text-center">
+															
+															<a
+																href={`https://pubmed.ncbi.nlm.nih.gov/?term=${parseKeywords(analysis.dataset.description)}${result.gene.symbol}`}
+																target="_blank"
+																rel="noopener noreferrer"
+																className="text-blue-500 hover:underline"
+															>
+																{result.gene.symbol}
+															</a>
 														</td>
 													</tr>
 												))}
