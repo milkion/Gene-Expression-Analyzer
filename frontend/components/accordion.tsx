@@ -95,6 +95,15 @@ export function FAQAccordion() {
 					<p className="text-lg leading-relaxed text-gray-700 mt-4">
 						Both files should be bundled in a ZIP archive (max size: 10MB) for upload.
 					</p>
+					<div className="mt-4">
+					<a
+						href="/SampleDataset/sample_dataset.zip"
+						download
+						className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+					>
+						Download Sample Dataset
+					</a>
+					</div>
 				</AccordionContent>
 			</AccordionItem>
 
