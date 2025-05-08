@@ -132,7 +132,7 @@ export default function ReportsPage() {
 						/>
 					</div>
 
-					<div className="backdrop-blur-md bg-white/0 min-h-screen rounded-3xl py-10 px-10 border border-white/40 shadow-xl">
+					<div className="backdrop-blur-md bg-white/50 min-h-screen rounded-3xl py-10 px-10 border border-white/40 shadow-xl">
 						<div className="flex justify-end items-center mb-4 gap-4">
 							<div className="relative">
 								<select
