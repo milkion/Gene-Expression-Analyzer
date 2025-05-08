@@ -33,6 +33,11 @@ export function NavigationBar() {
 								<NavigationMenuLink href="/reports">Reports</NavigationMenuLink>
 							</NavigationMenuItem>
 							<NavigationMenuItem>
+								<NavigationMenuLink href="/forum" className="cursor-pointer hover:font-semibold">
+									Forum
+								</NavigationMenuLink>
+							</NavigationMenuItem>
+							<NavigationMenuItem>
 								<NavigationMenuLink
 									href="/profile"
 									className="cursor-pointer hover:font-semibold"
