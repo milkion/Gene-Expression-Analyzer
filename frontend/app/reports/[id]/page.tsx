@@ -305,7 +305,6 @@ export default function DetailedReportPage() {
 															</div>
 														</th>
 													))}
-													<th className="py-2">PubMed Link</th>
 												</tr>
 											</thead>
 											<tbody>
@@ -331,17 +330,6 @@ export default function DetailedReportPage() {
 														</td>
 														<td className="p-2 text-center">
 															{result.bStat.toFixed(4)}
-														</td>
-														<td className="p-2 text-center">
-															
-															<a
-																href={`https://pubmed.ncbi.nlm.nih.gov/?term=${parseKeywords(analysis.dataset.description)}${result.gene.symbol}`}
-																target="_blank"
-																rel="noopener noreferrer"
-																className="text-blue-500 hover:underline"
-															>
-																{result.gene.symbol}
-															</a>
 														</td>
 													</tr>
 												))}
@@ -392,7 +380,8 @@ export default function DetailedReportPage() {
 											<WikipediaGeneTable
 												genes={analysis.result.results.map(
 													(r) => r.gene.symbol
-												)}
+												)} 
+												keywords={analysis.dataset.description}
 											/>
 										</div>
 									</div>

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export function WikipediaGeneTable({ genes }: { genes: string[] }) {
+export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywords: string }) {
 	const [wikiData, setWikiData] = useState<{ [key: string]: any }>({});
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -81,6 +81,11 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 		setShowGeneDialog(true);
 	};
 
+	const parseKeywords = (keywords: string | null) => {
+		if (!keywords) return "";
+		return keywords.replace(/[\s,]+/g, '+') + "+";
+	};
+
 	const navigateToGeneResource = (resource: string) => {
 		if (!selectedGene) return;
 
@@ -97,6 +102,9 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 					url = `https://www.uniprot.org/uniprotkb?query=${selectedGene}&facets=model_organism%3A9606`;
 				}
 				break;
+			case "pubmed":
+				url = `https://pubmed.ncbi.nlm.nih.gov/?term=${parseKeywords(keywords)}${selectedGene}`;
+				break
 			default:
 				return;
 		}
@@ -195,6 +203,12 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 							onClick={() => navigateToGeneResource("uniprot")}
 						>
 							UniProt
+						</Button>
+						<Button
+							className="w-full"
+							onClick={() => navigateToGeneResource("pubmed")}
+						>
+							PubMed
 						</Button>
 					</div>
 				</DialogContent>
