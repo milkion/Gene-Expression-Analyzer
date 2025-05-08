@@ -20,7 +20,7 @@ export function NavigationBar() {
 	}, []);
 
 	return (
-		<div>
+		<div className="relative z-50 bg-white shadow-sm">
 			<div className="flex flex-row justify-between items-center max-w mx-auto px-20 py-6">
 				<a href="/" className="font-medium text-3xl hover:cursor-pointer">
 					BioGeneX
