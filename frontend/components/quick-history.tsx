@@ -74,8 +74,9 @@ export function QuickHistory() {
 
 	return (
 		<div className="px-20 mt-2">
-			<h2 className="text-2xl font-medium ml-4 mb-4">Quick History</h2>
-			<div className="bg-black/5 rounded-xl p-4 shadow-sm">
+			<div className="backdrop-blur-md bg-white/30 p-6 rounded-3xl border border-white/40 shadow-xl">
+				<h2 className="text-2xl font-medium ml-4 my-4">Quick History</h2>
+
 				<div className="grid grid-cols-3 gap-4 px-4 py-2 font-medium text-gray-600">
 					<div>Dataset Name</div>
 					<div>Analysis ID</div>
@@ -85,7 +86,7 @@ export function QuickHistory() {
 				{historyItems.map((item) => (
 					<div
 						key={`${item.id}-${item.dateCreated}`}
-						className="grid grid-cols-3 gap-4 px-4 py-4 bg-gray-200 rounded-lg my-2 cursor-pointer hover:bg-gray-300 transition-colors"
+						className="grid grid-cols-3 gap-4 px-4 py-4 bg-white/40 rounded-lg my-2 cursor-pointer hover:bg-white/60 transition-colors"
 						onClick={() => handleRowClick(item.id)}
 					>
 						<div>{item.datasetName}</div>

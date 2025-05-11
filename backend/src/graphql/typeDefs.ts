@@ -17,6 +17,10 @@ const typeDefs = gql`
 
 		# Check which analyses from a list of IDs still exist
 		checkAnalysesExist(ids: [ID!]!): [ID!]!
+
+		# Forum related queries
+		forumPosts: [ForumPost!]!
+		forumPost(id: ID!): ForumPost
 	}
 
 	type Mutation {
@@ -36,6 +40,12 @@ const typeDefs = gql`
 
 		# Logs in a user and returns a token
 		login(email: String!, password: String!): AuthPayload!
+
+		# Forum related mutations
+		createForumPost(postInput: ForumPostInput!): ForumPost!
+		addComment(postId: ID!, content: String!): Comment!
+		deleteForumPost(id: ID!): Boolean!
+		deleteComment(id: ID!): Boolean!
 	}
 
 	type User {
@@ -158,6 +168,31 @@ const typeDefs = gql`
 		ANALYZING
 		COMPLETED
 		FAILED
+	}
+
+	type ForumPost {
+		id: ID!
+		title: String!
+		content: String!
+		author: User!
+		createdAt: String!
+		updatedAt: String!
+		comments: [Comment!]!
+		analysisId: ID
+	}
+
+	type Comment {
+		id: ID!
+		content: String!
+		author: User!
+		createdAt: String!
+		post: ForumPost!
+	}
+
+	input ForumPostInput {
+		title: String!
+		content: String!
+		analysisId: ID
 	}
 `;
 

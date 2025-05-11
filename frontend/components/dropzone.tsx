@@ -200,67 +200,69 @@ export function FileDropzone() {
 
 	return (
 		<div className="px-20 py-8">
-			<h2 className="text-2xl font-medium mb-4 ml-4">Dataset Upload</h2>
-			<Dropzone {...dropzone}>
-				<DropZoneArea
-					className={`min-h-[300px] ${
-						isAnalyzing ? "bg-gray-100 opacity-75" : ""
-					}`}
-				>
-					<DropzoneTrigger className="w-full flex flex-col items-center text-center pt-20 pb-16 gap-4 text-lg">
-						{isAnalyzing ? (
-							<div className="font-medium p-6 rounded-xl">
-								<div className="flex items-center justify-center mb-4">
-									<svg
-										className="animate-spin -ml-1 mr-3 h-8 w-8"
-										xmlns="http://www.w3.org/2000/svg"
-										fill="none"
-										viewBox="0 0 24 24"
-									>
-										<circle
-											className="opacity-25"
-											cx="12"
-											cy="12"
-											r="10"
-											stroke="currentColor"
-											strokeWidth="4"
-										></circle>
-										<path
-											className="opacity-100"
-											fill="currentColor"
-											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-										></path>
-									</svg>
+			<div className="backdrop-blur-md bg-white/30 p-6 rounded-3xl border border-white/40 shadow-xl">
+				<h2 className="text-2xl font-medium my-4 ml-4">Dataset Upload</h2>
+				<Dropzone {...dropzone}>
+					<DropZoneArea
+						className={`min-h-[300px] ${
+							isAnalyzing ? "bg-gray-100/70 opacity-75" : "bg-white/20"
+						} rounded-2xl`}
+					>
+						<DropzoneTrigger className="w-full flex flex-col items-center text-center pt-20 pb-16 gap-4 text-lg">
+							{isAnalyzing ? (
+								<div className="font-medium p-6 rounded-xl">
+									<div className="flex items-center justify-center mb-4">
+										<svg
+											className="animate-spin -ml-1 mr-3 h-8 w-8"
+											xmlns="http://www.w3.org/2000/svg"
+											fill="none"
+											viewBox="0 0 24 24"
+										>
+											<circle
+												className="opacity-25"
+												cx="12"
+												cy="12"
+												r="10"
+												stroke="currentColor"
+												strokeWidth="4"
+											></circle>
+											<path
+												className="opacity-100"
+												fill="currentColor"
+												d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+											></path>
+										</svg>
+									</div>
+									<p className="text-xl">Analysis in progress</p>
+									<p className="mt-3">
+										Please wait until the current analysis completes before
+										uploading a new file.
+									</p>
+									<p className="mt-5 text-sm">
+										You can view the progress in the Reports section.
+									</p>
 								</div>
-								<p className="text-xl">Analysis in progress</p>
-								<p className="mt-3">
-									Please wait until the current analysis completes before
-									uploading a new file.
-								</p>
-								<p className="mt-5 text-sm">
-									You can view the progress in the Reports section.
-								</p>
-							</div>
-						) : (
-							<>
-								<p>Drop your dataset here, or import from your local files</p>
-								<DropzoneMessage className="mt-2 text-center">
-									Supported format: .zip
-								</DropzoneMessage>
-								<img
-									src={importIcon.src}
-									alt="File icon"
-									className="my-4 h-20 w-20"
-								/>
-								<p className="max-w-xl">
-									Please ensure that the zip file contains the expression data
-									and the phenotype data
-								</p>
-							</>
-						)}
-					</DropzoneTrigger>
-				</DropZoneArea>
-			</Dropzone>
+							) : (
+								<>
+									<p>Drop your dataset here, or import from your local files</p>
+									<DropzoneMessage className="mt-2 text-center">
+										Supported format: .zip
+									</DropzoneMessage>
+									<img
+										src={importIcon.src}
+										alt="File icon"
+										className="my-4 h-20 w-20"
+									/>
+									<p className="max-w-xl">
+										Please ensure that the zip file contains the expression data
+										and the phenotype data
+									</p>
+								</>
+							)}
+						</DropzoneTrigger>
+					</DropZoneArea>
+				</Dropzone>
+			</div>
 
 			<Dialog open={showDialog} onOpenChange={setShowDialog}>
 				<DialogContent className="m:max-w-[425px] text-lg">

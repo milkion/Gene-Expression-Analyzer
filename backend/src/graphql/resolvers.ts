@@ -7,11 +7,13 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import ForumPost from "../models/ForumPost.js";
+import Comment from "../models/Comment.js";
+import { Schema, model } from "mongoose";
 
-dotenv.config(); // Load environment variables
-// Define types for resolver parameters and context
+dotenv.config(); 
 type ResolverParent = any;
-type ResolverContext = { userId?: string }; //This ensures TypeScript knows userId exists in the context.
+type ResolverContext = { userId?: string }; 
 
 // Define types for GraphQL arguments
 interface AnalysisArgs {
@@ -163,6 +165,35 @@ export const resolvers = {
 				throw new Error(`Failed to check analyses: ${error instanceof Error ? error.message : 'Unknown error'}`);
 			}
 		},
+		async forumPosts() {
+			try {
+				return await ForumPost.find()
+					.sort({ createdAt: -1 })
+					.populate('author')
+					.populate('comments');
+			} catch (error) {
+				throw new Error(`Failed to fetch forum posts: ${error.message}`);
+			}
+		},
+		async forumPost(_, { id }) {
+			try {
+				const post = await ForumPost.findById(id)
+					.populate('author')
+					.populate({
+						path: 'comments',
+						populate: { path: 'author' },
+						options: { sort: { createdAt: 1 } }
+					});
+				
+				if (!post) {
+					throw new Error(`Forum post with ID ${id} not found`);
+				}
+				
+				return post;
+			} catch (error) {
+				throw new Error(`Failed to fetch forum post: ${error.message}`);
+			}
+		}
 	},
 	Mutation: {
 		async createAnalysis(
@@ -422,6 +453,115 @@ export const resolvers = {
 				throw error;
 			}
 		},
+		async createForumPost(_, { postInput }, context) {
+			if (!context.userId) {
+				throw new Error('Not authenticated');
+			}
+			
+			try {
+				const post = new ForumPost({
+					title: postInput.title,
+					content: postInput.content,
+					author: context.userId,
+					analysisId: postInput.analysisId || null,
+					comments: []
+				});
+				
+				const savedPost = await post.save();
+				await savedPost.populate('author');
+				
+				return savedPost;
+			} catch (error) {
+				throw new Error(`Failed to create forum post: ${error.message}`);
+			}
+		},
+		async addComment(_, { postId, content }, context) {
+			if (!context.userId) {
+				throw new Error('Not authenticated');
+			}
+			
+			try {
+				const post = await ForumPost.findById(postId);
+				if (!post) {
+					throw new Error(`Forum post with ID ${postId} not found`);
+				}
+				
+				const comment = new Comment({
+					content,
+					author: context.userId,
+					post: postId
+				});
+				
+				const savedComment = await comment.save();
+				
+				// Add comment to post's comments array
+				post.comments.push(savedComment._id);
+				await post.save();
+				
+				await savedComment.populate('author');
+				
+				return savedComment;
+			} catch (error) {
+				throw new Error(`Failed to add comment: ${error.message}`);
+			}
+		},
+		async deleteForumPost(_, { id }, context) {
+			if (!context.userId) {
+				throw new Error('Not authenticated');
+			}
+			
+			try {
+				const post = await ForumPost.findById(id);
+				if (!post) {
+					throw new Error(`Forum post with ID ${id} not found`);
+				}
+				
+				// Check if user is the author
+				if (post.author.toString() !== context.userId) {
+					throw new Error('Not authorized to delete this post');
+				}
+				
+				// Delete all comments associated with this post
+				await Comment.deleteMany({ post: id });
+				
+				// Delete the post
+				await ForumPost.findByIdAndDelete(id);
+				
+				return true;
+			} catch (error) {
+				throw new Error(`Failed to delete forum post: ${error.message}`);
+			}
+		},
+		async deleteComment(_, { id }, context) {
+			if (!context.userId) {
+				throw new Error('Not authenticated');
+			}
+			
+			try {
+				const comment = await Comment.findById(id);
+				if (!comment) {
+					throw new Error(`Comment with ID ${id} not found`);
+				}
+				
+				// Check if user is the author
+				if (comment.author.toString() !== context.userId) {
+					throw new Error('Not authorized to delete this comment');
+				}
+				
+				// Remove comment from post's comments array
+				await ForumPost.updateOne(
+					{ _id: comment.post },
+					{ $pull: { comments: id } }
+				);
+				
+				// Delete the comment
+				await Comment.findByIdAndDelete(id);
+				
+				return true;
+			} catch (error) {
+				throw new Error(`Failed to delete comment: ${error.message}`);
+			}
+		}
 	},
 	// Field resolvers
 	// Field Resolvers to Hide Password

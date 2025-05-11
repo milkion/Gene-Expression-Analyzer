@@ -20,7 +20,7 @@ export function NavigationBar() {
 	}, []);
 
 	return (
-		<div>
+		<div className="relative z-50 bg-white shadow-sm">
 			<div className="flex flex-row justify-between items-center max-w mx-auto px-20 py-6">
 				<a href="/" className="font-medium text-3xl hover:cursor-pointer">
 					BioGeneX
@@ -31,6 +31,11 @@ export function NavigationBar() {
 						<NavigationMenuList className="flex gap-8 text-xl font-medium">
 							<NavigationMenuItem>
 								<NavigationMenuLink href="/reports">Reports</NavigationMenuLink>
+							</NavigationMenuItem>
+							<NavigationMenuItem>
+								<NavigationMenuLink href="/forum" className="cursor-pointer hover:font-semibold">
+									Forum
+								</NavigationMenuLink>
 							</NavigationMenuItem>
 							<NavigationMenuItem>
 								<NavigationMenuLink
