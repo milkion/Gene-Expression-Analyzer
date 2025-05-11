@@ -189,10 +189,10 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 				{/* Table and Data */}
 				<table className="w-full table-fixed">
 					<colgroup>
-						<col style={{ width: "25%" }} /> {/* Gene Symbol */}
-						<col style={{ width: "30%" }} /> {/* Description */}
-						<col style={{ width: "30%" }} /> {/* Function */}
-						<col style={{ width: "25%" }} /> {/* Image */}
+						<col style={{ width: "25%" }} />
+						<col style={{ width: "30%" }} />
+						<col style={{ width: "30%" }} />
+						<col style={{ width: "25%" }} />
 					</colgroup>
 					<thead>
 						<tr>
@@ -268,3 +268,8 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 		</>
 	);
 }
+
+// <col style={{ width: "25%" }} /> {/* Gene Symbol */}
+// <col style={{ width: "30%" }} /> {/* Description */}
+// <col style={{ width: "30%" }} /> {/* Function */}
+// <col style={{ width: "25%" }} /> {/* Image */}
