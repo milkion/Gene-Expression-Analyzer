@@ -44,7 +44,7 @@ async function preprocessFiles(): Promise<void> {
 	console.log("SUCCESS: ZIP extraction complete.");
 }
 
-export async function runR(analysisId: string): Promise<any> {
+export async function runR(analysisId: string, log_threshold:string, p_threshold:string): Promise<any> {
 	try {
 		// Set initial status to ANALYZING (we skip FETCHING and PARSING for simplicity)
 		await updateAnalysisStatus(analysisId, "ANALYZING");
@@ -81,7 +81,7 @@ export async function runR(analysisId: string): Promise<any> {
 		console.log("Running R script at:", rScriptPath);
 
 		return new Promise((resolve, reject) => {
-			const rProcess = spawn("Rscript", [rScriptPath]);
+			const rProcess = spawn("Rscript", [rScriptPath, log_threshold, p_threshold]);
 
 			let output = "";
 			let errorOutput = "";

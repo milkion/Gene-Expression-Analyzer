@@ -153,6 +153,14 @@ export function FileDropzone() {
 				size: parseFloat((currentFile.size / (1024 * 1024)).toFixed(2)),
 			};
 
+			const logfc = getlogFC.current?.value;
+			const pval = getpValue.current?.value;
+
+			if (!logfc || isNaN(Number(logfc)) || !pval || isNaN(Number(pval))) {
+				alert("Please enter valid numeric values for logFC and p-value thresholds!");
+				return;
+			}
+
 			const result = await createAnalysis(datasetInput);
 
 			// Trigger R script processing with the analysis ID
@@ -166,7 +174,11 @@ export function FileDropzone() {
 							headers: {
 								"Content-Type": "application/json",
 							},
-							body: JSON.stringify({ analysisId: result.id }),
+							body: JSON.stringify({
+								analysisId: result.id,
+								log_threshold: logfc,
+								p_threshold: pval,
+							}),
 						}
 					);
 
@@ -295,6 +307,7 @@ export function FileDropzone() {
 										<strong>P Value:</strong>{" "}
 										<input
 											ref={getpValue}
+											type="number"
 											className="w-full border rounded-md p-2"
 											defaultValue="0.05"
 											placeholder="Enter P Value"
@@ -304,6 +317,7 @@ export function FileDropzone() {
 										<strong>Log Fold Change:</strong>{" "}
 										<input
 											ref={getlogFC}
+											type="number"
 											className="w-full border rounded-md p-2"
 											defaultValue="1"
 											placeholder="Enter Log Fold Change"
