@@ -46,6 +46,8 @@ export function FileDropzone() {
 	const fileNameRef = useRef<HTMLInputElement>(null);
 	const descriptionRef = useRef<HTMLInputElement>(null);
 	const wasAnalyzingRef = useRef(false);
+	const getpValue = useRef<HTMLInputElement>(null);
+	const getlogFC = useRef<HTMLInputElement>(null);
 
 	// Check for analyzing reports
 	const { data: analysisData, refetch } = useQuery(CHECK_ANALYZING);
@@ -181,9 +183,9 @@ export function FileDropzone() {
 					console.error("Error processing analysis:", processError);
 					setError(
 						"File uploaded but analysis processing failed: " +
-							(processError instanceof Error
-								? processError.message
-								: String(processError))
+						(processError instanceof Error
+							? processError.message
+							: String(processError))
 					);
 				}
 			}
@@ -204,9 +206,8 @@ export function FileDropzone() {
 				<h2 className="text-2xl font-medium my-4 ml-4">Dataset Upload</h2>
 				<Dropzone {...dropzone}>
 					<DropZoneArea
-						className={`min-h-[300px] ${
-							isAnalyzing ? "bg-gray-100/70 opacity-75" : "bg-white/20"
-						} rounded-2xl`}
+						className={`min-h-[300px] ${isAnalyzing ? "bg-gray-100/70 opacity-75" : "bg-white/20"
+							} rounded-2xl`}
 					>
 						<DropzoneTrigger className="w-full flex flex-col items-center text-center pt-20 pb-16 gap-4 text-lg">
 							{isAnalyzing ? (
@@ -289,10 +290,28 @@ export function FileDropzone() {
 										placeholder="Optional description"
 									/>
 								</p>
-								<p>
-									<strong>File Size:</strong>{" "}
-									{(currentFile.size / (1024 * 1024)).toFixed(2)} MB
-								</p>
+								<div className="flex gap-4">
+									<p className="flex-1">
+										<strong>P Value:</strong>{" "}
+										<input
+											ref={getpValue}
+											className="w-full border rounded-md p-2"
+											defaultValue="0.05"
+											placeholder="Enter P Value"
+										/>
+									</p>
+									<p className="flex-1">
+										<strong>Log Fold Change:</strong>{" "}
+										<input
+											ref={getlogFC}
+											className="w-full border rounded-md p-2"
+											defaultValue="1"
+											placeholder="Enter Log Fold Change"
+										/>
+									</p>
+								</div>
+								<p className="text-xs">P Value and Log Fold Values above are default values, adjust to your needs.</p>
+
 							</div>
 						)}
 					</div>
