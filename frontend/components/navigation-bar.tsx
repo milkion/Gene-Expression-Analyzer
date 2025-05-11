@@ -30,12 +30,22 @@ export function NavigationBar() {
 					<NavigationMenu>
 						<NavigationMenuList className="flex gap-8 text-xl font-medium">
 							<NavigationMenuItem>
-								<NavigationMenuLink href="/reports">Reports</NavigationMenuLink>
+								<NavigationMenuLink href="/reports" className="cursor-pointer hover:font-semibold">Reports</NavigationMenuLink>
 							</NavigationMenuItem>
 							<NavigationMenuItem>
 								<NavigationMenuLink href="/forum" className="cursor-pointer hover:font-semibold">
 									Forum
 								</NavigationMenuLink>
+							</NavigationMenuItem>
+							<NavigationMenuItem>
+								<a
+									href="https://www.ncbi.nlm.nih.gov/gds/"
+									target="_blank"
+									rel="noopener noreferrer"
+									className="cursor-pointer hover:font-semibold"
+								>
+									NCBI
+								</a>
 							</NavigationMenuItem>
 							<NavigationMenuItem>
 								<NavigationMenuLink
