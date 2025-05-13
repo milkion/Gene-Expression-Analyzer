@@ -183,8 +183,14 @@ cat("Volcano plot PNG saved to:", png_file, "\n")
 volcano_plot_base64 <- base64encode(png_file)
 
 #Significant Differential Expressed Genes
-pThreshold <- 0.05
-logThreshold <- 1
+args <- commandArgs(trailingOnly = TRUE)
+
+# Parse thresholds from arguments
+logThreshold <- as.numeric(args[1])
+pThreshold <- as.numeric(args[2])
+
+cat("logThreshold:", logThreshold, "\n")
+cat("pThreshold:", pThreshold, "\n")
 
 significantGenes <- results[results$adj.P.Val < pThreshold & abs(results$logFC) > logThreshold, ]
 significantGenes <- significantGenes[order(significantGenes$adj.P.Val), ]
