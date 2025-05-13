@@ -26,7 +26,7 @@ export const AnalysisInformation: React.FC<AnalysisInformationProps> = ({
 							<div>{analysis.dataset.name}</div>
 							<div>ANALYSIS ID:</div>
 							<div>{analysis.id}</div>
-							<div>DESCRIPTION:</div>
+							<div>KEYWORDS:</div>
 							<div>{analysis.dataset.description || "-"}</div>
 						</div>
 					</div>

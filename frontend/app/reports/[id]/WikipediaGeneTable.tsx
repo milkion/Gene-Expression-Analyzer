@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export function WikipediaGeneTable({ genes }: { genes: string[] }) {
+export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywords: string }) {
 	const [wikiData, setWikiData] = useState<{ [key: string]: any }>({});
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -81,6 +81,11 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 		setShowGeneDialog(true);
 	};
 
+	const parseKeywords = (keywords: string | null) => {
+		if (!keywords) return "";
+		return keywords.replace(/[\s,]+/g, '+') + "+";
+	};
+
 	const navigateToGeneResource = (resource: string) => {
 		if (!selectedGene) return;
 
@@ -97,6 +102,9 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 					url = `https://www.uniprot.org/uniprotkb?query=${selectedGene}&facets=model_organism%3A9606`;
 				}
 				break;
+			case "pubmed":
+				url = `https://pubmed.ncbi.nlm.nih.gov/?term=${parseKeywords(keywords)}${selectedGene}`;
+				break
 			default:
 				return;
 		}
@@ -201,70 +209,72 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 							<th className="py-3 px-6 text-left">Function</th>
 							<th className="py-3 px-6 text-center">Image</th>
 						</tr>
-					</thead>
-					<tbody>
-						{genes.slice(0, 20).map((gene) => (
-							<tr key={gene} className="hover:bg-gray-50">
-								<td className="py-3 px-6 text-center">
-									<a
-										href="#"
-										className="font-medium text-blue-600 hover:underline"
-										onClick={(e) => handleGeneClick(gene, e)}
-									>
-										{gene}
-									</a>
-								</td>
-								<td className="py-3 px-6 text-left">
-									{wikiData[gene]?.description || "No description available"}
-								</td>
-								<td className="py-3 px-6 text-left">
-									{wikiData[gene]?.function ||
-										"No function information available"}
-								</td>
-								<td className="py-3 px-6 text-center">
-									{wikiData[gene]?.imageUrl ? (
-										<img
-											src={wikiData[gene].imageUrl}
-											alt={`Image of ${gene}`}
-											className="w-20 h-20 object-contain mx-auto"
-										/>
-									) : (
-										<span className="text-gray-400">No image available</span>
-									)}
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
+        </thead>
+        <tbody>
+          {genes.slice(0, 20).map((gene) => (
+            <tr key={gene} className="hover:bg-gray-50">
+              <td className="py-3 px-6 text-center">
+                <a
+                  href="#"
+                  className="font-medium text-blue-600 hover:underline"
+                  onClick={(e) => handleGeneClick(gene, e)}
+                >
+                  {gene}
+                </a>
+              </td>
+              <td className="py-3 px-6 text-left">
+                {wikiData[gene]?.description || "No description available"}
+              </td>
+              <td className="py-3 px-6 text-left">
+                {wikiData[gene]?.function ||
+                  "No function information available"}
+              </td>
+              <td className="py-3 px-6 text-center">
+                {wikiData[gene]?.imageUrl ? (
+                  <img
+                    src={wikiData[gene].imageUrl}
+                    alt={`Image of ${gene}`}
+                    className="w-20 h-20 object-contain mx-auto"
+                  />
+                ) : (
+                  <span className="text-gray-400">No image available</span>
+                )}
+              </td>
+            </tr>
+					))}
+				</tbody>
+			</table>
 
-
-
-				{/* Dialog for Gene Resources */}
-				<Dialog open={showGeneDialog} onOpenChange={setShowGeneDialog}>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>{selectedGene}</DialogTitle>
-							<DialogDescription>
-								View this gene in external databases
-							</DialogDescription>
-						</DialogHeader>
-						<div className="space-y-4">
-							<Button
-								className="w-full"
-								onClick={() => navigateToGeneResource("genecards")}
-							>
-								GeneCards
-							</Button>
-							<Button
-								className="w-full"
-								onClick={() => navigateToGeneResource("uniprot")}
-							>
-								UniProt
-							</Button>
-						</div>
-					</DialogContent>
-				</Dialog>
-			</div>
+			<Dialog open={showGeneDialog} onOpenChange={setShowGeneDialog}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>{selectedGene}</DialogTitle>
+						<DialogDescription>
+							View this gene in external databases
+						</DialogDescription>
+					</DialogHeader>
+					<div className="space-y-4">
+						<Button
+							className="w-full"
+							onClick={() => navigateToGeneResource("genecards")}
+						>
+							GeneCards
+						</Button>
+						<Button
+							className="w-full"
+							onClick={() => navigateToGeneResource("uniprot")}
+						>
+							UniProt
+						</Button>
+						<Button
+							className="w-full"
+							onClick={() => navigateToGeneResource("pubmed")}
+						>
+							PubMed
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</>
 	);
 }

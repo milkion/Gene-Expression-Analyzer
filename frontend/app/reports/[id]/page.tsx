@@ -203,6 +203,12 @@ export default function DetailedReportPage() {
 	};
 
 
+	const parseKeywords = (keywords: string | null) => {
+		if (!keywords) return "";
+		return keywords.replace(/[\s,]+/g, '+') + "+";
+	}
+
+
 	return (
 		<Protected>
 			<div>
@@ -415,7 +421,6 @@ export default function DetailedReportPage() {
 												</div>
 											</div>
 
-
 										) : (
 											<></>
 										)
@@ -444,8 +449,9 @@ export default function DetailedReportPage() {
 
 												<WikipediaGeneTable
 													genes={analysis.result.results.map(
-														(r) => r.gene.symbol
-													)}
+													(r) => r.gene.symbol
+												  )} 
+												  keywords={analysis.dataset.description}
 												/>
 											</div>
 										</div>
