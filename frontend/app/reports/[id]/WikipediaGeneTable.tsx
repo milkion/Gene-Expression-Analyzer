@@ -113,6 +113,50 @@ export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywo
 		setShowGeneDialog(false);
 	};
 
+	// Generate CSV Data
+	const generateCSV = () => {
+		const headers = ["Gene Symbol", "Description", "Function", "Image URL"];
+		const rows = genes.slice(0, 20).map((gene) => {
+			const description = wikiData[gene]?.description || "No description available";
+			const func = wikiData[gene]?.function || "No function information available";
+			const imageUrl = wikiData[gene]?.imageUrl || "No image available";
+
+			// Escape special characters for CSV format
+			const escapeCsv = (str: string) => {
+				if (str.includes('"')) {
+					str = str.replace(/"/g, '""');
+				}
+				if (str.includes(",") || str.includes("\n")) {
+					str = `"${str}"`;
+				}
+				return str;
+			};
+
+			return [
+				escapeCsv(gene),
+				escapeCsv(description),
+				escapeCsv(func),
+				escapeCsv(imageUrl),
+			];
+		});
+
+		// Combine headers and rows into CSV format
+		const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
+
+		return csvContent;
+	};
+
+	// Trigger CSV download
+	const downloadCSV = () => {
+		const csvContent = generateCSV();
+		const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.setAttribute("href", url);
+		link.setAttribute("download", "gene_info.csv");
+		link.click();
+	};
+
 	if (loading) {
 		return (
 			<div className="p-4 text-center">
@@ -133,52 +177,70 @@ export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywo
 
 	return (
 		<>
-			<table className="w-full table-fixed">
-				<colgroup>
-					<col style={{ width: "25%" }} /> {/* Gene Symbol */}
-					<col style={{ width: "30%" }} /> {/* Description */}
-					<col style={{ width: "30%" }} /> {/* Function */}
-					<col style={{ width: "25%" }} /> {/* Image */}
-				</colgroup>
-				<thead>
-					<tr>
-						<th className="py-3 px-6 text-center">Gene Symbol</th>
-						<th className="py-3 px-6 text-left">Description</th>
-						<th className="py-3 px-6 text-left">Function</th>
-						<th className="py-3 px-6 text-center">Image</th>
-					</tr>
-				</thead>
-				<tbody>
-					{genes.slice(0, 20).map((gene) => (
-						<tr key={gene} className="hover:bg-gray-50">
-							<td className="py-3 px-6 text-center">
-								<a
-									href="#"
-									className="font-medium text-blue-600 hover:underline"
-									onClick={(e) => handleGeneClick(gene, e)}
-								>
-									{gene}
-								</a>
-							</td>
-							<td className="py-3 px-6 text-left">
-								{wikiData[gene]?.description || "No description available"}
-							</td>
-							<td className="py-3 px-6 text-left">
-								{wikiData[gene]?.function ||
-									"No function information available"}
-							</td>
-							<td className="py-3 px-6 text-center">
-								{wikiData[gene]?.imageUrl ? (
-									<img
-										src={wikiData[gene].imageUrl}
-										alt={`Image of ${gene}`}
-										className="w-20 h-20 object-contain mx-auto"
-									/>
-								) : (
-									<span className="text-gray-400">No image available</span>
-								)}
-							</td>
+			<div className="space-y-4">
+				{/* Download CSV Button */}
+				<div className="group cursor-pointer mb-4">
+					<a
+						className="font-medium ml-1 pl-12 text-base group-hover:underline"
+						id="download-csv"
+						onClick={downloadCSV}
+					>
+						Download
+					</a>
+					<img
+						src="/../download-icon.svg"
+						alt="download_icon"
+						className="ml-3 pb-2 inline-block"
+					/>
+					{/* <Button onClick={}>Download CSV</Button> */}
+				</div>
+				{/* Table and Data */}
+				<table className="w-full table-fixed">
+					<colgroup>
+						<col style={{ width: "25%" }} />
+						<col style={{ width: "30%" }} />
+						<col style={{ width: "30%" }} />
+						<col style={{ width: "25%" }} />
+					</colgroup>
+					<thead>
+						<tr>
+							<th className="py-3 px-6 text-center">Gene Symbol</th>
+							<th className="py-3 px-6 text-left">Description</th>
+							<th className="py-3 px-6 text-left">Function</th>
+							<th className="py-3 px-6 text-center">Image</th>
 						</tr>
+        </thead>
+        <tbody>
+          {genes.slice(0, 20).map((gene) => (
+            <tr key={gene} className="hover:bg-gray-50">
+              <td className="py-3 px-6 text-center">
+                <a
+                  href="#"
+                  className="font-medium text-blue-600 hover:underline"
+                  onClick={(e) => handleGeneClick(gene, e)}
+                >
+                  {gene}
+                </a>
+              </td>
+              <td className="py-3 px-6 text-left">
+                {wikiData[gene]?.description || "No description available"}
+              </td>
+              <td className="py-3 px-6 text-left">
+                {wikiData[gene]?.function ||
+                  "No function information available"}
+              </td>
+              <td className="py-3 px-6 text-center">
+                {wikiData[gene]?.imageUrl ? (
+                  <img
+                    src={wikiData[gene].imageUrl}
+                    alt={`Image of ${gene}`}
+                    className="w-20 h-20 object-contain mx-auto"
+                  />
+                ) : (
+                  <span className="text-gray-400">No image available</span>
+                )}
+              </td>
+            </tr>
 					))}
 				</tbody>
 			</table>
@@ -216,3 +278,8 @@ export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywo
 		</>
 	);
 }
+
+// <col style={{ width: "25%" }} /> {/* Gene Symbol */}
+// <col style={{ width: "30%" }} /> {/* Description */}
+// <col style={{ width: "30%" }} /> {/* Function */}
+// <col style={{ width: "25%" }} /> {/* Image */}

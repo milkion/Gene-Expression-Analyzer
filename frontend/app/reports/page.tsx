@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import SearchBar from "./searchbar";
-import FilterDropdown from "./filterdropdown";
 import { NavigationBar } from "@/components/navigation-bar";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { useRouter } from "next/navigation";
 import Protected from "@/components/Protected";
+import background2 from "@/public/background3.png";
 
 // Define the GraphQL Query
 const GET_ANALYSES = gql`
@@ -37,15 +37,14 @@ export default function ReportsPage() {
 	const [sortField, setSortField] = useState("date");
 	const [sortOrder, setSortOrder] = useState("desc");
 
-
 	// Fetch data using useQuery with polling
 	const { loading, error, data, refetch } = useQuery(GET_ANALYSES, {
 		pollInterval: 5000, // Refetch every 5 seconds (5000ms)
-		fetchPolicy: "network-only" // Always fetch from network to get latest data
+		fetchPolicy: "network-only", // Always fetch from network to get latest data
 	});
 
-	const [deleteAnalysis, { loading: deleteLoading }] = useMutation(DELETE_ANALYSIS);
-
+	const [deleteAnalysis, { loading: deleteLoading }] =
+		useMutation(DELETE_ANALYSIS);
 
 	// Function to navigate to detail page
 	const navigateToDetails = (reportId: string) => {
@@ -62,7 +61,7 @@ export default function ReportsPage() {
 					onCompleted: () => {
 						// Refetch the data to update the UI
 						refetch();
-					}
+					},
 				});
 			} catch (err) {
 				console.error("Error deleting report:", err);
@@ -109,23 +108,31 @@ export default function ReportsPage() {
 		return 0;
 	});
 
-
 	return (
 		<Protected>
 			<div>
 				<NavigationBar />
-				<div className="p-4 mx-8">
+
+				{/* Fixed Background Image */}
+				<div
+					className="fixed top-[72px] left-0 right-0 bottom-0 bg-cover bg-center bg-no-repeat animate-pulse-slow overflow-hidden"
+					style={{
+						backgroundImage: `url(${background2.src})`,
+						zIndex: -1,
+						transformOrigin: "center center",
+						opacity: 0.6,
+					}}
+				/>
+
+				<div className="p-4 mx-8 relative z-10">
 					<div className="flex mb-6 pt-2 pl-4">
 						<SearchBar
 							searchQuery={searchQuery}
 							setSearchQuery={setSearchQuery}
 						/>
-
-
 					</div>
 
-
-					<div className="bg-slate-100 min-h-screen rounded-3xl py-10 px-10">
+					<div className="backdrop-blur-md bg-white/50 min-h-screen rounded-3xl py-10 px-10 border border-white/40 shadow-xl">
 						<div className="flex justify-end items-center mb-4 gap-4">
 							<div className="relative">
 								<select
@@ -157,7 +164,6 @@ export default function ReportsPage() {
 							</div>
 						</div>
 
-
 						<div className="grid grid-cols-[1fr_300px_100px] px-4 mb-2 text-gray-600">
 							<div>Report ID</div>
 							<div>Status</div>
@@ -171,18 +177,26 @@ export default function ReportsPage() {
 									let bgColor = "bg-gray-200";
 									if (report.status === "COMPLETED") bgColor = "bg-green-200";
 									else if (report.status === "FAILED") bgColor = "bg-red-200";
-									else if (report.status === "ANALYZING") bgColor = "bg-amber-200";
+									else if (report.status === "ANALYZING")
+										bgColor = "bg-amber-200";
 
 									// Determine if report should be clickable
-									const isDisabled = report.status === "ANALYZING" || report.status === "FAILED";
-									const cursorStyle = isDisabled ? "cursor-not-allowed" : "cursor-pointer";
-									const opacity = isDisabled ? "opacity-70" : "hover:opacity-90";
+									const isDisabled =
+										report.status === "ANALYZING" || report.status === "FAILED";
+									const cursorStyle = isDisabled
+										? "cursor-not-allowed"
+										: "cursor-pointer";
+									const opacity = isDisabled
+										? "opacity-70"
+										: "hover:opacity-90";
 
 									return (
 										<div
 											key={report.id}
-											className={`${bgColor} rounded-3xl p-8 grid grid-cols-[1fr_300px_100px] items-center ${cursorStyle} ${opacity} transition-all duration-300`}
-											onClick={() => !isDisabled && navigateToDetails(report.id)}
+											className={`${bgColor} backdrop-blur-sm rounded-3xl p-8 grid grid-cols-[1fr_300px_100px] items-center ${cursorStyle} ${opacity} transition-all duration-300 border border-white/20`}
+											onClick={() =>
+												!isDisabled && navigateToDetails(report.id)
+											}
 										>
 											<div>
 												<div className="font-medium">{report.id}</div>
@@ -191,9 +205,10 @@ export default function ReportsPage() {
 												</div>
 												{isDisabled && (
 													<div className="text-xs text-gray-600 mt-1 italic">
-														{report.status === "ANALYZING" ?
-															"Analysis in progress - results not ready" :
-															report.errorMessage || "Analysis failed - no results available"}
+														{report.status === "ANALYZING"
+															? "Analysis in progress - results not ready"
+															: report.errorMessage ||
+															  "Analysis failed - no results available"}
 													</div>
 												)}
 											</div>
@@ -213,7 +228,7 @@ export default function ReportsPage() {
 								})}
 							</div>
 						) : (
-							<div className="text-center p-4 bg-gray-100 rounded-lg">
+							<div className="text-center p-4 bg-white/20 backdrop-blur-sm rounded-lg border border-white/20">
 								No reports found.
 							</div>
 						)}
