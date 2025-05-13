@@ -13,7 +13,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywords: string }) {
+export function WikipediaGeneTable({
+	genes,
+	keywords,
+}: {
+	genes: string[];
+	keywords: string;
+}) {
 	const [wikiData, setWikiData] = useState<{ [key: string]: any }>({});
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -83,7 +89,7 @@ export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywo
 
 	const parseKeywords = (keywords: string | null) => {
 		if (!keywords) return "";
-		return keywords.replace(/[\s,]+/g, '+') + "+";
+		return keywords.replace(/[\s,]+/g, "+") + "+";
 	};
 
 	const navigateToGeneResource = (resource: string) => {
@@ -103,8 +109,10 @@ export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywo
 				}
 				break;
 			case "pubmed":
-				url = `https://pubmed.ncbi.nlm.nih.gov/?term=${parseKeywords(keywords)}${selectedGene}`;
-				break
+				url = `https://pubmed.ncbi.nlm.nih.gov/?term=${parseKeywords(
+					keywords
+				)}${selectedGene}`;
+				break;
 			default:
 				return;
 		}
@@ -117,8 +125,10 @@ export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywo
 	const generateCSV = () => {
 		const headers = ["Gene Symbol", "Description", "Function", "Image URL"];
 		const rows = genes.slice(0, 20).map((gene) => {
-			const description = wikiData[gene]?.description || "No description available";
-			const func = wikiData[gene]?.function || "No function information available";
+			const description =
+				wikiData[gene]?.description || "No description available";
+			const func =
+				wikiData[gene]?.function || "No function information available";
 			const imageUrl = wikiData[gene]?.imageUrl || "No image available";
 
 			// Escape special characters for CSV format
@@ -141,7 +151,9 @@ export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywo
 		});
 
 		// Combine headers and rows into CSV format
-		const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
+		const csvContent = [headers, ...rows]
+			.map((row) => row.join(","))
+			.join("\n");
 
 		return csvContent;
 	};
@@ -209,72 +221,73 @@ export function WikipediaGeneTable({ genes, keywords }: { genes: string[]; keywo
 							<th className="py-3 px-6 text-left">Function</th>
 							<th className="py-3 px-6 text-center">Image</th>
 						</tr>
-        </thead>
-        <tbody>
-          {genes.slice(0, 20).map((gene) => (
-            <tr key={gene} className="hover:bg-gray-50">
-              <td className="py-3 px-6 text-center">
-                <a
-                  href="#"
-                  className="font-medium text-blue-600 hover:underline"
-                  onClick={(e) => handleGeneClick(gene, e)}
-                >
-                  {gene}
-                </a>
-              </td>
-              <td className="py-3 px-6 text-left">
-                {wikiData[gene]?.description || "No description available"}
-              </td>
-              <td className="py-3 px-6 text-left">
-                {wikiData[gene]?.function ||
-                  "No function information available"}
-              </td>
-              <td className="py-3 px-6 text-center">
-                {wikiData[gene]?.imageUrl ? (
-                  <img
-                    src={wikiData[gene].imageUrl}
-                    alt={`Image of ${gene}`}
-                    className="w-20 h-20 object-contain mx-auto"
-                  />
-                ) : (
-                  <span className="text-gray-400">No image available</span>
-                )}
-              </td>
-            </tr>
-					))}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{genes.slice(0, 20).map((gene) => (
+							<tr key={gene} className="hover:bg-gray-50">
+								<td className="py-3 px-6 text-center">
+									<a
+										href="#"
+										className="font-medium text-blue-600 hover:underline"
+										onClick={(e) => handleGeneClick(gene, e)}
+									>
+										{gene}
+									</a>
+								</td>
+								<td className="py-3 px-6 text-left">
+									{wikiData[gene]?.description || "No description available"}
+								</td>
+								<td className="py-3 px-6 text-left">
+									{wikiData[gene]?.function ||
+										"No function information available"}
+								</td>
+								<td className="py-3 px-6 text-center">
+									{wikiData[gene]?.imageUrl ? (
+										<img
+											src={wikiData[gene].imageUrl}
+											alt={`Image of ${gene}`}
+											className="w-20 h-20 object-contain mx-auto"
+										/>
+									) : (
+										<span className="text-gray-400">No image available</span>
+									)}
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
 
-			<Dialog open={showGeneDialog} onOpenChange={setShowGeneDialog}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>{selectedGene}</DialogTitle>
-						<DialogDescription>
-							View this gene in external databases
-						</DialogDescription>
-					</DialogHeader>
-					<div className="space-y-4">
-						<Button
-							className="w-full"
-							onClick={() => navigateToGeneResource("genecards")}
-						>
-							GeneCards
-						</Button>
-						<Button
-							className="w-full"
-							onClick={() => navigateToGeneResource("uniprot")}
-						>
-							UniProt
-						</Button>
-						<Button
-							className="w-full"
-							onClick={() => navigateToGeneResource("pubmed")}
-						>
-							PubMed
-						</Button>
-					</div>
-				</DialogContent>
-			</Dialog>
+				<Dialog open={showGeneDialog} onOpenChange={setShowGeneDialog}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>{selectedGene}</DialogTitle>
+							<DialogDescription>
+								View this gene in external databases
+							</DialogDescription>
+						</DialogHeader>
+						<div className="space-y-4">
+							<Button
+								className="w-full"
+								onClick={() => navigateToGeneResource("genecards")}
+							>
+								GeneCards
+							</Button>
+							<Button
+								className="w-full"
+								onClick={() => navigateToGeneResource("uniprot")}
+							>
+								UniProt
+							</Button>
+							<Button
+								className="w-full"
+								onClick={() => navigateToGeneResource("pubmed")}
+							>
+								PubMed
+							</Button>
+						</div>
+					</DialogContent>
+				</Dialog>
+			</div>
 		</>
 	);
 }
