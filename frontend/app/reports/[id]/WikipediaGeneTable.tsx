@@ -13,7 +13,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-export function WikipediaGeneTable({ genes }: { genes: string[] }) {
+export function WikipediaGeneTable({
+	genes,
+	keywords,
+}: {
+	genes: string[];
+	keywords: string;
+}) {
 	const [wikiData, setWikiData] = useState<{ [key: string]: any }>({});
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -81,6 +87,11 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 		setShowGeneDialog(true);
 	};
 
+	const parseKeywords = (keywords: string | null) => {
+		if (!keywords) return "";
+		return keywords.replace(/[\s,]+/g, "+") + "+";
+	};
+
 	const navigateToGeneResource = (resource: string) => {
 		if (!selectedGene) return;
 
@@ -97,6 +108,11 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 					url = `https://www.uniprot.org/uniprotkb?query=${selectedGene}&facets=model_organism%3A9606`;
 				}
 				break;
+			case "pubmed":
+				url = `https://pubmed.ncbi.nlm.nih.gov/?term=${parseKeywords(
+					keywords
+				)}${selectedGene}`;
+				break;
 			default:
 				return;
 		}
@@ -109,8 +125,10 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 	const generateCSV = () => {
 		const headers = ["Gene Symbol", "Description", "Function", "Image URL"];
 		const rows = genes.slice(0, 20).map((gene) => {
-			const description = wikiData[gene]?.description || "No description available";
-			const func = wikiData[gene]?.function || "No function information available";
+			const description =
+				wikiData[gene]?.description || "No description available";
+			const func =
+				wikiData[gene]?.function || "No function information available";
 			const imageUrl = wikiData[gene]?.imageUrl || "No image available";
 
 			// Escape special characters for CSV format
@@ -133,7 +151,9 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 		});
 
 		// Combine headers and rows into CSV format
-		const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
+		const csvContent = [headers, ...rows]
+			.map((row) => row.join(","))
+			.join("\n");
 
 		return csvContent;
 	};
@@ -237,9 +257,6 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 					</tbody>
 				</table>
 
-
-
-				{/* Dialog for Gene Resources */}
 				<Dialog open={showGeneDialog} onOpenChange={setShowGeneDialog}>
 					<DialogContent>
 						<DialogHeader>
@@ -260,6 +277,12 @@ export function WikipediaGeneTable({ genes }: { genes: string[] }) {
 								onClick={() => navigateToGeneResource("uniprot")}
 							>
 								UniProt
+							</Button>
+							<Button
+								className="w-full"
+								onClick={() => navigateToGeneResource("pubmed")}
+							>
+								PubMed
 							</Button>
 						</div>
 					</DialogContent>

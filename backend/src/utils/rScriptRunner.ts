@@ -44,19 +44,23 @@ async function preprocessFiles(): Promise<void> {
 	console.log("SUCCESS: ZIP extraction complete.");
 }
 
-export async function runR(analysisId: string): Promise<any> {
+export async function runR(
+	analysisId: string,
+	log_threshold: string,
+	p_threshold: string
+): Promise<any> {
 	try {
 		// Set initial status to ANALYZING (we skip FETCHING and PARSING for simplicity)
 		await updateAnalysisStatus(analysisId, "ANALYZING");
-		
+
 		// Wait for ZIP extraction to complete
 		try {
 			await preprocessFiles();
 		} catch (err) {
 			console.error("Error during preprocessing:", err);
 			await updateAnalysisStatus(
-				analysisId, 
-				"FAILED", 
+				analysisId,
+				"FAILED",
 				`Preprocessing error: ${err.message}`
 			);
 			return;
@@ -67,8 +71,8 @@ export async function runR(analysisId: string): Promise<any> {
 		if (!fs.existsSync(expressionFilePath)) {
 			console.error("ERROR: CSV file NOT found. Check extraction logic.");
 			await updateAnalysisStatus(
-				analysisId, 
-				"FAILED", 
+				analysisId,
+				"FAILED",
 				"Required file 'expression_data.csv' not found. Please check your uploaded ZIP file."
 			);
 			return;
@@ -81,7 +85,11 @@ export async function runR(analysisId: string): Promise<any> {
 		console.log("Running R script at:", rScriptPath);
 
 		return new Promise((resolve, reject) => {
-			const rProcess = spawn("Rscript", [rScriptPath]);
+			const rProcess = spawn("Rscript", [
+				rScriptPath,
+				log_threshold,
+				p_threshold,
+			]);
 
 			let output = "";
 			let errorOutput = "";
@@ -142,7 +150,7 @@ export async function runR(analysisId: string): Promise<any> {
 							},
 						};
 						await updateAnalysis(analysisId, updatePayload.results);
-						
+
 						// Update status to COMPLETED only after successfully updating the results
 						await updateAnalysisStatus(analysisId, "COMPLETED");
 
@@ -176,8 +184,16 @@ async function updateAnalysisStatus(
 ) {
 	try {
 		const UPDATE_STATUS_MUTATION = gql`
-			mutation UpdateAnalysisStatus($id: ID!, $status: AnalysisStatus!, $errorMessage: String) {
-				updateAnalysisStatus(id: $id, status: $status, errorMessage: $errorMessage) {
+			mutation UpdateAnalysisStatus(
+				$id: ID!
+				$status: AnalysisStatus!
+				$errorMessage: String
+			) {
+				updateAnalysisStatus(
+					id: $id
+					status: $status
+					errorMessage: $errorMessage
+				) {
 					id
 					status
 					errorMessage
@@ -189,8 +205,12 @@ async function updateAnalysisStatus(
 			mutation: UPDATE_STATUS_MUTATION,
 			variables: { id: analysisId, status, errorMessage },
 		});
-		
-		console.log(`Successfully updated analysis ${analysisId} status to ${status}${errorMessage ? ` with error: ${errorMessage}` : ''}`);
+
+		console.log(
+			`Successfully updated analysis ${analysisId} status to ${status}${
+				errorMessage ? ` with error: ${errorMessage}` : ""
+			}`
+		);
 	} catch (error) {
 		console.error("Failed to update analysis status:", error);
 	}

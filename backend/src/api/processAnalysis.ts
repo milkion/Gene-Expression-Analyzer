@@ -2,16 +2,16 @@ import { runR } from "../utils/rScriptRunner.js";
 
 export async function processAnalysis(req, res) {
 	try {
-		const { analysisId } = req.body;
+		const { analysisId, log_threshold, p_threshold } = req.body;
 
 		if (!analysisId) {
 			return res.status(400).json({ error: "Analysis ID is required" });
 		}
 
 		// Start R script processing in the background
-		runR(analysisId)
+		runR(analysisId, log_threshold, p_threshold)
 			.then(() => {
-				console.log(`Analysis ${analysisId} processed successfully`);
+				console.log(`Analysis ${analysisId} with settings [log: ${log_threshold} p: ${p_threshold}] processed successfully`);
 			})
 			.catch((error) => {
 				console.error(`Error processing analysis ${analysisId}:`, error);
