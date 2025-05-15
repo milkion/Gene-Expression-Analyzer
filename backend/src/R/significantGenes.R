@@ -69,6 +69,11 @@ if (!dir.exists(output_dir)) {
 
 # length(gse)
 
+# -------------------------------------------------------------------------
+# INPUT DATA INTEGRITY AND FORMAT TESTING
+# -------------------------------------------------------------------------
+print("Starting white box testing...")
+
 # Read expression data with explicit column types
 expression_file <- file.path(retrieve_dir, "expression_data.csv")
 if (!file.exists(expression_file)) {
@@ -83,34 +88,80 @@ if (!file.exists(phenotype_file)) {
 }
 phenotypeData <- read_csv(phenotype_file, show_col_types = FALSE)
 
-# Print data to verify
-print("Expression Data:")
-print(head(expressionData))
+# Test: Check matrix dimensions
+cat("TEST - Input Data Dimensions:\n")
+cat("Expression data dimensions:", dim(expressionData)[1], "rows x", dim(expressionData)[2], "columns\n")
+cat("Phenotype data dimensions:", dim(phenotypeData)[1], "rows x", dim(phenotypeData)[2], "columns\n")
+cat("Sample size consistency check:", ifelse(ncol(expressionData)-1 == nrow(phenotypeData), "PASS", "FAIL"), "\n")
 
-print("Phenotype Data:")
-print(head(phenotypeData))
+# Test: Verify data types
+cat("TEST - Data Types:\n")
+cat("Expression data column types:\n")
+print(sapply(expressionData, class))
+cat("Phenotype data column types:\n")
+print(sapply(phenotypeData, class))
 
-print("---------------------------------------")
+# Test: Check for missing values in input data
+cat("TEST - Missing Values in Input Data:\n")
+cat("Missing values in expression data:", sum(is.na(expressionData)), "\n")
+cat("Missing values in phenotype data:", sum(is.na(phenotypeData)), "\n")
+
+# Test: Validate column headers and row identifiers
+cat("TEST - Column Headers and Row Identifiers:\n")
+cat("Expression data column names:\n")
+print(colnames(expressionData))
+cat("Phenotype data column names:\n")
+print(colnames(phenotypeData))
 
 # Ensure probeID is a character vector and store it before converting
 geneSymbols <- as.character(expressionData[[1]])
+
+# -------------------------------------------------------------------------
+# DATA PREPROCESSING TESTING
+# -------------------------------------------------------------------------
+
+# Test: Check for duplicate gene symbols
+cat("TEST - Duplicate Gene Symbols:\n")
+cat("Total gene symbols:", length(geneSymbols), "\n")
+cat("Unique gene symbols:", length(unique(geneSymbols)), "\n")
+cat("Number of duplicates:", length(geneSymbols) - length(unique(geneSymbols)), "\n")
 
 # Convert tibble to a numeric matrix for analysis
 expressionData <- as.matrix(expressionData[,-1])  # Remove the first column (probe IDs) and convert to matrix
 mode(expressionData) <- "numeric"  # Ensure numeric type
 
+# Test: Verify matrix conversion
+cat("TEST - Matrix Conversion:\n")
+cat("Is matrix:", is.matrix(expressionData), "\n")
+cat("Is numeric:", is.numeric(expressionData), "\n")
+cat("Matrix dimensions after conversion:", dim(expressionData)[1], "x", dim(expressionData)[2], "\n")
+
 # Handle duplicate and NA gene symbols
 uniqueGeneSymbols <- make.unique(ifelse(is.na(geneSymbols), "NA", geneSymbols))
+
+# Test: Verify unique gene symbols
+cat("TEST - Unique Gene Symbols:\n")
+cat("Length of uniqueGeneSymbols:", length(uniqueGeneSymbols), "\n")
+cat("Are all symbols unique now:", length(uniqueGeneSymbols) == length(unique(uniqueGeneSymbols)), "\n")
 
 # Assign row names
 rownames(expressionData) <- uniqueGeneSymbols
 
-# Verify row names
-cat("Row names after assignment:\n")
+# Test: Verify row names assignment
+cat("TEST - Row Names Assignment:\n")
+cat("Number of row names:", length(rownames(expressionData)), "\n")
+cat("First few row names:\n")
 print(head(rownames(expressionData)))
 
 # Replace NA with 0
+na_count_before <- sum(is.na(expressionData))
 expressionData[is.na(expressionData)] <- 0
+na_count_after <- sum(is.na(expressionData))
+
+# Test: Verify NA handling
+cat("TEST - NA Handling:\n")
+cat("NA values before replacement:", na_count_before, "\n")
+cat("NA values after replacement:", na_count_after, "\n")
 
 # Data transformation verification
 print("Range of expression data:")
@@ -126,14 +177,38 @@ print(median(as.vector(expressionData), na.rm = TRUE))
 condition <- ifelse(grepl("control", phenotypeData$title, ignore.case = TRUE), "Control", "Diseased")
 condition <- factor(condition, levels = c("Control", "Diseased"))
 
-table(condition)
+# Test: Verify condition factor
+cat("TEST - Condition Factor:\n")
+print(table(condition))
+cat("Is factor:", is.factor(condition), "\n")
+cat("Levels:", paste(levels(condition), collapse=", "), "\n")
 
 design <- model.matrix(~condition)
+
+# Test: Verify design matrix
+cat("TEST - Design Matrix:\n")
+cat("Design matrix dimensions:", dim(design)[1], "x", dim(design)[2], "\n")
+print(head(design))
+
 fit <- lmFit(expressionData, design)
 fit <- eBayes(fit)
 
+# Test: Verify eBayes fit
+cat("TEST - eBayes Fit:\n")
+cat("Fit object class:", class(fit), "\n")
+cat("Number of genes in fit:", length(fit$genes), "\n")
+cat("Number of coefficients:", length(fit$coefficients[1,]), "\n")
+
 # Ensure probe IDs are included in the results
 results <- topTable(fit, coef = 2, number = Inf)
+
+# Test: Verify topTable results
+cat("TEST - topTable Results:\n")
+cat("Number of results:", nrow(results), "\n")
+cat("Columns in results:", paste(colnames(results), collapse=", "), "\n")
+cat("P-value range:", min(results$P.Value), "to", max(results$P.Value), "\n")
+cat("Adjusted P-value range:", min(results$adj.P.Val), "to", max(results$adj.P.Val), "\n")
+cat("logFC range:", min(results$logFC), "to", max(results$logFC), "\n")
 
 print(head(results))
 
@@ -155,6 +230,13 @@ cat("pThreshold:", pThreshold, "\n")
 
 significantGenes <- results[results$adj.P.Val < pThreshold & abs(results$logFC) > logThreshold, ]
 significantGenes <- significantGenes[order(significantGenes$adj.P.Val), ]
+
+# Test: Verify significant genes filtering
+cat("TEST - Significant Genes Filtering:\n")
+cat("Number of significant genes:", nrow(significantGenes), "\n")
+cat("Percentage of significant genes:", round(nrow(significantGenes)/nrow(results)*100, 2), "%\n")
+cat("Min adjusted P-value in significant genes:", min(significantGenes$adj.P.Val), "\n")
+cat("Min absolute logFC in significant genes:", min(abs(significantGenes$logFC)), "\n")
 
 # Define the PNG output file
 png_file <- file.path(output_dir, "volcano_plot.png")
@@ -223,21 +305,37 @@ significantGenes <- significantGenes[, c("geneSymbol", setdiff(names(significant
 
 # Map gene symbols to UniProt IDs using biomaRt
 # Connect to Ensembl BioMart
-ensembl <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-
-# Get the correct attribute names for UniProt IDs
-# Uncomment to check available attributes
-# attr <- listAttributes(ensembl)
-# print(attr[grep("uniprot", attr$name, ignore.case=TRUE),])
+cat("TEST - Ensembl BioMart Connection:\n")
+tryCatch({
+  ensembl <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+  cat("Successfully connected to Ensembl BioMart\n")
+  cat("Mart object class:", class(ensembl), "\n")
+}, error = function(e) {
+  cat("ERROR connecting to Ensembl BioMart:", e$message, "\n")
+})
 
 cat("Starting UniProt mapping with biomaRt...\n")
-mart_results <- getBM(
-  attributes = c("hgnc_symbol", "uniprotswissprot", "uniprotsptrembl"),
-  filters = "hgnc_symbol",
-  values = geneSymbols,
-  mart = ensembl
-)
-cat("Finished UniProt mapping.\n")
+mapping_start_time <- Sys.time()
+tryCatch({
+  mart_results <- getBM(
+    attributes = c("hgnc_symbol", "uniprotswissprot", "uniprotsptrembl"),
+    filters = "hgnc_symbol",
+    values = geneSymbols,
+    mart = ensembl
+  )
+  mapping_end_time <- Sys.time()
+  cat("Finished UniProt mapping in", difftime(mapping_end_time, mapping_start_time, units="secs"), "seconds\n")
+  
+  # Test: Verify mapping results
+  cat("TEST - UniProt Mapping Results:\n")
+  cat("Number of genes submitted for mapping:", length(geneSymbols), "\n")
+  cat("Number of genes with mapping results:", length(unique(mart_results$hgnc_symbol)), "\n")
+  cat("Mapping success rate:", round(length(unique(mart_results$hgnc_symbol))/length(unique(geneSymbols))*100, 2), "%\n")
+  cat("Number of SwissProt IDs found:", sum(!is.na(mart_results$uniprotswissprot) & mart_results$uniprotswissprot != ""), "\n")
+  cat("Number of TrEMBL IDs found:", sum(!is.na(mart_results$uniprotsptrembl) & mart_results$uniprotsptrembl != ""), "\n")
+}, error = function(e) {
+  cat("ERROR in UniProt mapping:", e$message, "\n")
+})
 
 # Process the results to get a single UniProt ID per gene
 # Prioritize SwissProt (reviewed) over TrEMBL (unreviewed) entries
@@ -253,9 +351,22 @@ uniprot_map <- setNames(mart_results$uniprot, mart_results$hgnc_symbol)
 # Add UniProt IDs to the data frame
 significantGenes$uniprotID <- uniprot_map[significantGenes$geneSymbol]
 
+# Test: Verify UniProt ID assignment
+cat("TEST - UniProt ID Assignment:\n")
+cat("Number of significant genes:", nrow(significantGenes), "\n")
+cat("Number of significant genes with UniProt IDs:", sum(!is.na(significantGenes$uniprotID)), "\n")
+cat("Percentage of significant genes with UniProt IDs:", round(sum(!is.na(significantGenes$uniprotID))/nrow(significantGenes)*100, 2), "%\n")
+
 # Save results as CSV
 output_csv <- file.path(output_dir, "significantGenes.csv")
 write.csv(significantGenes, file = output_csv, row.names = TRUE)
+
+# Test: Verify CSV file creation
+cat("TEST - CSV Output Generation:\n")
+cat("CSV file exists:", file.exists(output_csv), "\n")
+if(file.exists(output_csv)) {
+  cat("CSV file size:", file.info(output_csv)$size, "bytes\n")
+}
 
 # Format JSON output
 library(jsonlite)
@@ -264,15 +375,41 @@ colnames(significantGenes)[colnames(significantGenes) == "geneSymbol"] <- "symbo
 colnames(significantGenes)[colnames(significantGenes) == "P.Value"] <- "PValue"
 colnames(significantGenes)[colnames(significantGenes) == "adj.P.Val"] <- "adjPValue"
 
+# Test: Verify column renaming
+cat("TEST - Column Renaming:\n")
+cat("Columns after renaming:", paste(colnames(significantGenes), collapse=", "), "\n")
+
 json_output <- toJSON(list(
   message = "Success",
   significantGenes = significantGenes,
   volcanoPlotBase64 = volcano_plot_base64
 ), pretty = TRUE, auto_unbox = TRUE)
 
-cat(json_output)
-
 output_json <- file.path(output_dir, "significantGenes.json")
 write(json_output, file = output_json)
 
-cat("Significant genes data saved to:", output_csv, "and", output_json, "\n")
+# Test: Verify JSON file creation
+cat("TEST - JSON Output Generation:\n")
+cat("JSON file exists:", file.exists(output_json), "\n")
+if(file.exists(output_json)) {
+  cat("JSON file size:", file.info(output_json)$size, "bytes\n")
+  # Verify JSON structure
+  tryCatch({
+    json_test <- fromJSON(output_json)
+    cat("JSON structure validation: PASS\n")
+    cat("JSON contains message field:", "message" %in% names(json_test), "\n")
+    cat("JSON contains significantGenes field:", "significantGenes" %in% names(json_test), "\n")
+    cat("JSON contains volcanoPlotBase64 field:", "volcanoPlotBase64" %in% names(json_test), "\n")
+  }, error = function(e) {
+    cat("JSON structure validation: FAIL -", e$message, "\n")
+  })
+}
+
+# Test: Verify PNG file creation
+cat("TEST - Volcano Plot PNG Generation:\n")
+cat("PNG file exists:", file.exists(png_file), "\n")
+if(file.exists(png_file)) {
+  cat("PNG file size:", file.info(png_file)$size, "bytes\n")
+}
+
+cat("White box testing completed.\n")
