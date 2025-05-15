@@ -302,7 +302,7 @@ export function FileDropzone() {
 									<input
 										ref={descriptionRef}
 										className="w-full border rounded-md p-2"
-										placeholder="Optional description"
+										placeholder="Optional keywords"
 									/>
 								</p>
 								<div className="flex gap-4">
