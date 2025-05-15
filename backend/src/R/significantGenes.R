@@ -143,6 +143,19 @@ results$geneSymbol <- rownames(results)
 # Verify output
 head(results[, c("geneSymbol", "logFC", "adj.P.Val")])
 
+#Significant Differential Expressed Genes
+args <- commandArgs(trailingOnly = TRUE)
+
+# Parse thresholds from arguments
+logThreshold <- as.numeric(args[1])
+pThreshold <- as.numeric(args[2])
+
+cat("logThreshold:", logThreshold, "\n")
+cat("pThreshold:", pThreshold, "\n")
+
+significantGenes <- results[results$adj.P.Val < pThreshold & abs(results$logFC) > logThreshold, ]
+significantGenes <- significantGenes[order(significantGenes$adj.P.Val), ]
+
 # Define the PNG output file
 png_file <- file.path(output_dir, "volcano_plot.png")
 
@@ -154,14 +167,19 @@ png(png_file, width = 800, height = 600)
 results$geneSymbol <- rownames(results)
 
 # Subset significant results based on adjusted p-value and log fold change
-sig_results <- subset(results, adj.P.Val < 0.05 & abs(logFC) > 1)
+sig_results <- subset(results, adj.P.Val < pThreshold & abs(logFC) > logThreshold)
 
 # Plot
 volcano_plot <- ggplot(results, aes(x = logFC, y = -log10(adj.P.Val))) +
-  geom_point(aes(color = adj.P.Val < 0.05 & abs(logFC) > 1), alpha = 0.6) +
-  scale_color_manual(values = c("black", "red")) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "blue") +
-  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "blue") +
+  geom_point(aes(color = ifelse(adj.P.Val < pThreshold & abs(logFC) > logThreshold, 
+                                "Significant", "Not Significant")), 
+             alpha = 0.6) +
+  scale_color_manual(
+    values = c("Not Significant" = "black", "Significant" = "red"),
+    name = paste0("adj.P.Val < ", pThreshold, " & |logFC| > ", logThreshold)
+  ) +
+  geom_hline(yintercept = -log10(pThreshold), linetype = "dashed", color = "blue") +
+  geom_vline(xintercept = c(-logThreshold, logThreshold), linetype = "dashed", color = "blue") +
   theme_minimal() +
   labs(title = "Volcano Plot",
        x = "Log2 Fold Change",
@@ -181,19 +199,6 @@ cat("Volcano plot PNG saved to:", png_file, "\n")
 
 # Encode the PNG file as a Base64 string
 volcano_plot_base64 <- base64encode(png_file)
-
-#Significant Differential Expressed Genes
-args <- commandArgs(trailingOnly = TRUE)
-
-# Parse thresholds from arguments
-logThreshold <- as.numeric(args[1])
-pThreshold <- as.numeric(args[2])
-
-cat("logThreshold:", logThreshold, "\n")
-cat("pThreshold:", pThreshold, "\n")
-
-significantGenes <- results[results$adj.P.Val < pThreshold & abs(results$logFC) > logThreshold, ]
-significantGenes <- significantGenes[order(significantGenes$adj.P.Val), ]
 
 paste("Number of significant genes:", nrow(significantGenes))
 
@@ -225,13 +230,14 @@ ensembl <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
 # attr <- listAttributes(ensembl)
 # print(attr[grep("uniprot", attr$name, ignore.case=TRUE),])
 
-# Fetch UniProt IDs for the significant gene symbols
+cat("Starting UniProt mapping with biomaRt...\n")
 mart_results <- getBM(
   attributes = c("hgnc_symbol", "uniprotswissprot", "uniprotsptrembl"),
   filters = "hgnc_symbol",
   values = geneSymbols,
   mart = ensembl
 )
+cat("Finished UniProt mapping.\n")
 
 # Process the results to get a single UniProt ID per gene
 # Prioritize SwissProt (reviewed) over TrEMBL (unreviewed) entries

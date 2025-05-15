@@ -124,18 +124,20 @@ export default function DetailedReportPage() {
 		a.click();
 	};
 
-
 	function downloadCSV(genes) {
-		const csvContent = "data:text/csv;charset=utf-8," +
+		const csvContent =
+			"data:text/csv;charset=utf-8," +
 			// Define headers based on the structure of your WikipediaGeneTable data
 			"Gene Symbol, Description, Other Data\n" + // Adjust this as needed
-			genes.map(gene =>
-				[
-					gene.symbol,        // Gene Symbol
-					gene.description,   // Gene Description
-					gene.otherData      // Additional data, adjust as necessary
-				].join(",")
-			).join("\n");
+			genes
+				.map((gene) =>
+					[
+						gene.symbol, // Gene Symbol
+						gene.description, // Gene Description
+						gene.otherData, // Additional data, adjust as necessary
+					].join(",")
+				)
+				.join("\n");
 
 		// Create a temporary link element to trigger download
 		const link = document.createElement("a");
@@ -145,7 +147,6 @@ export default function DetailedReportPage() {
 		link.click();
 		document.body.removeChild(link);
 	}
-
 
 	const getSortedResults = () => {
 		if (!analysis?.result?.results || !sortField)
@@ -202,12 +203,10 @@ export default function DetailedReportPage() {
 		link.download = `results-${analysisId}-${timestamp}.csv`;
 	};
 
-
 	const parseKeywords = (keywords: string | null) => {
 		if (!keywords) return "";
-		return keywords.replace(/[\s,]+/g, '+') + "+";
-	}
-
+		return keywords.replace(/[\s,]+/g, "+") + "+";
+	};
 
 	return (
 		<Protected>
@@ -229,9 +228,8 @@ export default function DetailedReportPage() {
 
 						{analysis ? (
 							<div className="mt-6">
-
 								<AnalysisInformation analysis={analysis} />
-
+								{/* Summary */}
 								<div className="bg-gray-100 rounded-2xl pt-10 py-6 px-6 mt-6 relative">
 									<div className="grid grid-cols-3 grid-rows-2 gap-4 items-stretch justify-center relative">
 										{/* Top Left - Statistical Significance */}
@@ -241,9 +239,11 @@ export default function DetailedReportPage() {
 											</h3>
 											<p>
 												Lowest adjusted p-value:{" "}
-												{Number(
-													analysis.result.results[0].adjustedPValue
-												).toExponential(2)}
+												{analysis.result?.results?.length > 0
+													? Number(
+															analysis.result.results[0]?.adjustedPValue || 0
+													  ).toExponential(2)
+													: "N/A"}
 											</p>
 											<p>Indicates high confidence in these top results.</p>
 										</div>
@@ -251,9 +251,12 @@ export default function DetailedReportPage() {
 										<div className="bg-white rounded-xl shadow-sm p-6 col-start-2 row-start-1 row-span-2 flex flex-col items-center justify-center text-center">
 											<h3 className="font-semibold text-md mb-4">Top Genes</h3>
 											<ul className="space-y-2">
-												{analysis.result.results.slice(0, 5).map((r: any) => (
-													<li key={r.gene.symbol} className="text-lg">
-														{r.gene.symbol}
+												{analysis.result?.results?.slice(0, 5).map((r: any) => (
+													<li
+														key={r.gene?.symbol || `gene-${r.id}`}
+														className="text-lg"
+													>
+														{r.gene?.symbol || "Unknown"}
 													</li>
 												))}
 											</ul>
@@ -265,7 +268,10 @@ export default function DetailedReportPage() {
 												Confidence (B-Statistic)
 											</h3>
 											<p>
-												Top B score: {analysis.result.results[0].bStat.toFixed(2)}
+												Top B score:{" "}
+												{analysis.result?.results?.length > 0
+													? (analysis.result.results[0]?.bStat || 0).toFixed(2)
+													: "N/A"}
 											</p>
 											<p>Higher B means stronger model confidence.</p>
 										</div>
@@ -274,12 +280,15 @@ export default function DetailedReportPage() {
 										<div className="bg-white rounded-xl shadow-sm p-4 col-start-1 row-start-2 flex flex-col items-center justify-center text-center">
 											<h3 className="font-semibold mb-2">Avg. LogFC</h3>
 											<p className="text-xl font">
-												{(
-													analysis.result.results.reduce(
-														(sum: number, r: any) => sum + Math.abs(r.logFC),
-														0
-													) / analysis.result.results.length
-												).toFixed(4)}
+												{analysis.result?.results?.length > 0
+													? (
+															analysis.result.results.reduce(
+																(sum: number, r: any) =>
+																	sum + Math.abs(r?.logFC || 0),
+																0
+															) / analysis.result.results.length
+													  ).toFixed(4)
+													: "N/A"}
 											</p>
 										</div>
 
@@ -287,15 +296,15 @@ export default function DetailedReportPage() {
 										<div className="bg-white rounded-xl shadow-sm p-4 col-start-3 row-start-2 flex flex-col items-center justify-center text-center">
 											<h3 className="font-semibold mb-2">Total genes:</h3>
 											<p className="text-xl font">
-												{analysis.result.results.length}
+												{analysis.result?.results?.length || 0}
 											</p>
 										</div>
 									</div>
 								</div>
 
 								{analysis.result &&
-									analysis.result.results &&
-									analysis.result.results.length > 0 ? (
+								analysis.result.results &&
+								analysis.result.results.length > 0 ? (
 									<div>
 										<h2 className="font-medium mt-10 m-4">
 											Gene Analysis Results
@@ -407,7 +416,9 @@ export default function DetailedReportPage() {
 
 													{/* Volcano Plot Section */}
 													<div className="bg-white rounded-2xl py-8 px-10 flex flex-col justify-center items-center">
-														<h2 className="font-medium text-xl mb-4">Volcano Plot</h2>
+														<h2 className="font-medium text-xl mb-4">
+															Volcano Plot
+														</h2>
 
 														<img
 															id="base64-image"
@@ -420,19 +431,22 @@ export default function DetailedReportPage() {
 													</div>
 												</div>
 											</div>
-
 										) : (
 											<></>
-										)
-										}
+										)}
 
 										{/* Wikipedia Gene Information Section */}
 										<div>
-											<h2 className="font-medium mt-10 m-4">Gene Encyclopedia</h2>
+											<h2 className="font-medium mt-10 m-4">
+												Gene Encyclopedia
+											</h2>
 											<p className="text-gray-700 m-4">
-												The gene information displayed below is sourced from Wikipedia and may not always be accurate or up-to-date.
-												Wikipedia content is community-edited and should be used as a starting point for research only. We recommend
-												cross-checking any critical information with authoritative scientific databases or literature.
+												The gene information displayed below is sourced from
+												Wikipedia and may not always be accurate or up-to-date.
+												Wikipedia content is community-edited and should be used
+												as a starting point for research only. We recommend
+												cross-checking any critical information with
+												authoritative scientific databases or literature.
 											</p>
 											<Alert className="bg-blue-100 rounded-2xl mb-4">
 												<Terminal className="h-4 w-4" />
@@ -446,12 +460,11 @@ export default function DetailedReportPage() {
 											</Alert>
 
 											<div className="bg-gray-100 rounded-2xl pt-10 py-6">
-
 												<WikipediaGeneTable
 													genes={analysis.result.results.map(
-													(r) => r.gene.symbol
-												  )} 
-												  keywords={analysis.dataset.description}
+														(r) => r.gene.symbol
+													)}
+													keywords={analysis.dataset.description}
 												/>
 											</div>
 										</div>
@@ -466,9 +479,6 @@ export default function DetailedReportPage() {
 					</div>
 				</div>
 			</div>
-
 		</Protected>
 	);
 }
-
-
