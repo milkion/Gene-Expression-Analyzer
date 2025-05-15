@@ -103,6 +103,7 @@ export default {
 				"accordion-down": "accordion-down 0.1s ease-out",
 				"accordion-up": "accordion-up 0.1s ease-out",
 				"pulse-slow": "pulse-rotate 3s ease-in-out infinite",
+				
 			},
 		},
 	},
