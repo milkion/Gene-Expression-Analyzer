@@ -43,6 +43,16 @@ const analysisSchema = new Schema(
 		updatedAt: {
 			type: Date,
 		},
+		logThreshold: {
+			type: Number,
+			required: false,
+			default: 1,
+		},
+		pThreshold: {
+			type: Number,
+			required: false,
+			default: 0.05,
+		},
 	},
 	{
 		timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },

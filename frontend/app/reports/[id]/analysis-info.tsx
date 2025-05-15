@@ -4,10 +4,14 @@ interface AnalysisInformationProps {
 	analysis: {
 		id: string;
 		status: string;
+		logThreshold?: number;
+		pThreshold?: number;
 		dataset: {
 			name: string;
 			description: string | null;
 		};
+		createdAt: string;
+		updatedAt: string;
 	};
 }
 
@@ -28,6 +32,8 @@ export const AnalysisInformation: React.FC<AnalysisInformationProps> = ({
 							<div>{analysis.id}</div>
 							<div>KEYWORDS:</div>
 							<div>{analysis.dataset.description || "-"}</div>
+							<div>LOG VALUE:</div>
+							<div>{analysis.logThreshold || 1}</div>
 						</div>
 					</div>
 
@@ -43,6 +49,8 @@ export const AnalysisInformation: React.FC<AnalysisInformationProps> = ({
 							</div>
 							<div>RESULTS:</div>
 							<div>{analysis.status}</div>
+							<div>P-VALUE:</div>
+							<div>{analysis.pThreshold || 0.05}</div>
 						</div>
 					</div>
 				</div>

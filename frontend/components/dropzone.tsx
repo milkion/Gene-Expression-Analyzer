@@ -161,12 +161,15 @@ export function FileDropzone() {
 				return;
 			}
 
-			const result = await createAnalysis(datasetInput);
+			const result = await createAnalysis({
+				datasetInput,
+				logThreshold: Number(logfc),
+				pThreshold: Number(pval)
+			});
 
 			// Trigger R script processing with the analysis ID
 			if (result && result.id) {
 				try {
-					// Updated to use the correct backend URL - make sure this matches your backend server
 					const response = await fetch(
 						"http://localhost:4000/api/process-analysis",
 						{

@@ -35,11 +35,13 @@ const UPDATE_ANALYSIS_MUTATION = gql`
 `;
 
 const CREATE_ANALYSIS_MUTATION = gql`
-	mutation CreateAnalysis($datasetInput: DatasetInput) {
-		createAnalysis(datasetInput: $datasetInput) {
+	mutation CreateAnalysis($input: AnalysisInput!) {
+		createAnalysis(input: $input) {
 			id
 			date
 			status
+			logThreshold
+			pThreshold
 			dataset {
 				id
 				name
@@ -71,16 +73,16 @@ export async function updateAnalysis(id, results) {
 	}
 }
 
-export async function createAnalysis(datasetInput) {
+export async function createAnalysis(input) {
 	try {
 		console.log(
-			"Creating analysis with dataset:",
-			JSON.stringify(datasetInput, null, 2)
+			"Creating analysis with input:",
+			JSON.stringify(input, null, 2)
 		);
 
 		const response = await client.mutate({
 			mutation: CREATE_ANALYSIS_MUTATION,
-			variables: { datasetInput },
+			variables: { input },
 		});
 
 		return response.data.createAnalysis;
