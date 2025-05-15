@@ -30,6 +30,8 @@ const GET_ANALYSIS = gql`
 			id
 			date
 			status
+			logThreshold
+			pThreshold
 			dataset {
 				name
 				description

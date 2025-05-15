@@ -28,7 +28,7 @@ const typeDefs = gql`
 		createUser(userInput: UserInput): AuthPayload!
 
 		# Creates a new analysis
-		createAnalysis(datasetInput: DatasetInput): Analysis!
+		createAnalysis(input: AnalysisInput!): Analysis!
 
 		# Update an analysis with results
 		updateAnalysisWithResults(id: ID!, results: AnalysisResultInput): Analysis!
@@ -77,6 +77,8 @@ const typeDefs = gql`
 		errorMessage: String
 		dataset: Dataset!
 		result: AnalysisResult
+		logThreshold: Float
+		pThreshold: Float
 		createdAt: String!
 		updatedAt: String!
 	}
@@ -193,6 +195,12 @@ const typeDefs = gql`
 		title: String!
 		content: String!
 		analysisId: ID
+	}
+
+	input AnalysisInput {
+		datasetInput: DatasetInput!
+		logThreshold: Float
+		pThreshold: Float
 	}
 `;
 

@@ -27,7 +27,11 @@ interface DatasetInput {
 }
 
 interface CreateAnalysisArgs {
-	datasetInput: DatasetInput;
+	input: {
+		datasetInput: DatasetInput;
+		logThreshold?: number;
+		pThreshold?: number;
+	};
 }
 
 interface DeleteAnalysisArgs {
@@ -198,39 +202,36 @@ export const resolvers = {
 	Mutation: {
 		async createAnalysis(
 			_: ResolverParent,
-			{ datasetInput: { name, description, size } }: CreateAnalysisArgs
+			{ input }: CreateAnalysisArgs
 		): Promise<any> {
 			try {
-				// Create a new dataset
+				const { datasetInput, logThreshold = 1, pThreshold = 0.05 } = input;
+				
+				// Create dataset
 				const dataset = new Dataset({
-					name: name,
-					description: description,
+					name: datasetInput.name,
+					description: datasetInput.description,
 					uploadedAt: new Date(),
-					size: size,
+					size: datasetInput.size,
 				});
-
-				const savedDataset = await dataset.save();
-
-				// Create a new analysis linked to this dataset
+				
+				await dataset.save();
+				
+				// Create analysis with thresholds
 				const analysis = new Analysis({
 					date: new Date(),
-					status: "ANALYZING", // Initial status
-					dataset: savedDataset._id,
-					results: [],
-					visualization: null,
+					status: "ANALYZING",
+					dataset: dataset._id,
+					logThreshold,
+					pThreshold,
 				});
-
-				const savedAnalysis = await analysis.save();
-
-				// Populate the dataset field for the response
-				await savedAnalysis.populate("dataset");
-
-				return savedAnalysis;
-			} catch (error: unknown) {
-				if (error instanceof Error) {
-					throw new Error(`Failed to create analysis: ${error.message}`);
-				}
-				throw new Error("Failed to create analysis: Unknown error");
+				
+				await analysis.save();
+				
+				return analysis;
+			} catch (error) {
+				console.error("Error creating analysis:", error);
+				throw new Error(`Failed to create analysis: ${error.message}`);
 			}
 		},
 		async deleteAnalysis(_, { id }) {
