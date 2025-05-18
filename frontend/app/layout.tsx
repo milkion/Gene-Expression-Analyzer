@@ -3,7 +3,8 @@
 import type { Metadata } from "next";
 import { Mulish } from "next/font/google";
 import "./globals.css";
-import { ApolloProvider, ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloProvider, ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -20,16 +21,25 @@ export default function RootLayout({
 	const [client, setClient] = useState<ApolloClient<any> | null>(null);
 
 	useEffect(() => {
-		const token = localStorage.getItem("token");
-		setIsAuthenticated(true);
+		const httpLink = createHttpLink({
+			uri: "http://localhost:4000/graphql",
+		});
+
+		const authLink = setContext((_, { headers }) => {
+			const token = localStorage.getItem("token");
+			return {
+				headers: {
+					...headers,
+					authorization: token ? `Bearer ${token}` : "",
+				},
+			};
+		});
 
 		const apolloClient = new ApolloClient({
-			uri: "http://localhost:4000/graphql",
+			link: authLink.concat(httpLink),
 			cache: new InMemoryCache(),
-			headers: {
-				authorization: `Bearer ${token}`,
-			},
 		});
+
 		setClient(apolloClient);
 	}, [router]);
 
