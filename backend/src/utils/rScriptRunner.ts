@@ -78,6 +78,17 @@ export async function runR(
 			return;
 		}
 
+		const phenotypeFilePath = "../public/dragdrop_files/unzipped/phenotype_data.csv";
+		if (!fs.existsSync(phenotypeFilePath)) {
+			console.error("ERROR: Phenotype CSV file NOT found.");
+			await updateAnalysisStatus(
+				analysisId,
+				"FAILED",
+				"Required file 'phenotype_data.csv' not found. Please check your uploaded ZIP file."
+			);
+			return;
+		}
+
 		console.log("CSV file found at:", expressionFilePath);
 		console.log("Starting R script after successful extraction...");
 
@@ -163,9 +174,18 @@ export async function runR(
 						reject(err);
 					}
 				} else {
-					const errMsg = `R script failed with exit code ${code}: ${errorOutput}`;
+					const filteredErrorLines = errorOutput
+						.split("\n")
+						.filter(line => line.startsWith("ERRMSG:"))
+						.map(line => line.replace("ERRMSG:", "Error:").trim());
+
+					const errMsg =
+						filteredErrorLines.length > 0
+							? filteredErrorLines.join("\n")
+							: `R script failed with exit code ${code}`;
+
 					await updateAnalysisStatus(analysisId, "FAILED", errMsg);
-					reject(new Error(`R script failed with code ${code}`));
+					reject(new Error(errMsg));
 				}
 			});
 		});
@@ -207,8 +227,7 @@ async function updateAnalysisStatus(
 		});
 
 		console.log(
-			`Successfully updated analysis ${analysisId} status to ${status}${
-				errorMessage ? ` with error: ${errorMessage}` : ""
+			`Successfully updated analysis ${analysisId} status to ${status}${errorMessage ? ` with error: ${errorMessage}` : ""
 			}`
 		);
 	} catch (error) {

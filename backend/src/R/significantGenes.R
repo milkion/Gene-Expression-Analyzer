@@ -79,7 +79,8 @@ expressionData <- read_csv(expression_file, show_col_types = FALSE)
 # Read phenotype data with explicit column types
 phenotype_file <- file.path(retrieve_dir, "phenotype_data.csv")
 if (!file.exists(phenotype_file)) {
-  stop("Error: Phenotype data file not found at ", phenotype_file)
+  message("ERRMSG: Phenotype data file not found at ", phenotype_file)
+  quit(status = 1)
 }
 phenotypeData <- read_csv(phenotype_file, show_col_types = FALSE)
 
