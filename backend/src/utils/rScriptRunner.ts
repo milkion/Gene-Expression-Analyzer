@@ -163,9 +163,18 @@ export async function runR(
 						reject(err);
 					}
 				} else {
-					const errMsg = `R script failed with exit code ${code}: ${errorOutput}`;
+					const filteredErrorLines = errorOutput
+						.split("\n")
+						.filter(line => line.startsWith("ERRMSG:"))
+						.map(line => line.replace("ERRMSG:", "Error:").trim());
+
+					const errMsg =
+						filteredErrorLines.length > 0
+							? filteredErrorLines.join("\n")
+							: `R script failed with exit code ${code}`;
+
 					await updateAnalysisStatus(analysisId, "FAILED", errMsg);
-					reject(new Error(`R script failed with code ${code}`));
+					reject(new Error(errMsg));
 				}
 			});
 		});
@@ -207,8 +216,7 @@ async function updateAnalysisStatus(
 		});
 
 		console.log(
-			`Successfully updated analysis ${analysisId} status to ${status}${
-				errorMessage ? ` with error: ${errorMessage}` : ""
+			`Successfully updated analysis ${analysisId} status to ${status}${errorMessage ? ` with error: ${errorMessage}` : ""
 			}`
 		);
 	} catch (error) {
