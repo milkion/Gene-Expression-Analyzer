@@ -46,13 +46,15 @@ UserSchema.pre<IUser>("save", async function (next) {
 	}
 
 	const saltRounds = 10;
-	// this.password = await bcrypt.hash(this.password, saltRounds);
+	this.password = await bcrypt.hash(this.password, saltRounds);
 	next();
 });
 
-
 // Method to validate password on login
-UserSchema.methods.validatePassword = async function (this: IUser, candidatePassword: string): Promise<boolean> {
+UserSchema.methods.validatePassword = async function (
+	this: IUser,
+	candidatePassword: string
+): Promise<boolean> {
 	return bcrypt.compare(candidatePassword, this.password);
 };
 
