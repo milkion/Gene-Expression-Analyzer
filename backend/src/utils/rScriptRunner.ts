@@ -47,8 +47,8 @@ async function preprocessFiles(): Promise<void> {
 export async function runR(
 	analysisId: string,
 	log_threshold: string,
-	p_threshold: string
-, token: string): Promise<any> {
+	p_threshold: string,
+	token: string): Promise<any> {
 	try {
 		// Set initial status to ANALYZING (we skip FETCHING and PARSING for simplicity)
 		await updateAnalysisStatus(analysisId, "ANALYZING");

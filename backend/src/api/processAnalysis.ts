@@ -10,7 +10,7 @@ export async function processAnalysis(req, res) {
 		}
 
 		// Start R script processing in the background
-		runR(analysisId, log_threshold, p_threshold)
+		runR(analysisId, log_threshold, p_threshold, token)
 			.then(() => {
 				console.log(`Analysis ${analysisId} with settings [log: ${log_threshold} p: ${p_threshold}] processed successfully`);
 			})
