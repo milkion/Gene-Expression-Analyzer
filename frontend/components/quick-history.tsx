@@ -11,6 +11,15 @@ const CHECK_ANALYSES_EXIST = gql`
 	}
 `;
 
+// Get current user ID
+const ME_QUERY = gql`
+	query Me {
+		me {
+			id
+		}
+	}
+`;
+
 interface HistoryItem {
 	id: string;
 	datasetName: string;
@@ -20,11 +29,26 @@ interface HistoryItem {
 
 export function QuickHistory() {
 	const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+	const [userId, setUserId] = useState<string | null>(null);
 	const router = useRouter();
+	
+	// First, fetch the current user's ID
+	const { data: userData } = useQuery(ME_QUERY);
+	
+	useEffect(() => {
+		if (userData?.me?.id) {
+			setUserId(userData.me.id);
+		}
+	}, [userData]);
 	
 	// Get all analysis IDs from history
 	const loadHistory = () => {
-		const savedHistory = localStorage.getItem("viewedReports");
+		if (!userId) return [];
+		
+		// Use user-specific key for localStorage
+		const historyKey = `viewedReports_${userId}`;
+		const savedHistory = localStorage.getItem(historyKey);
+		
 		if (savedHistory) {
 			try {
 				const parsedHistory = JSON.parse(savedHistory);
@@ -37,32 +61,33 @@ export function QuickHistory() {
 		return [];
 	};
 	
-	const initialHistory = loadHistory();
+	const initialHistory = userId ? loadHistory() : [];
 	const historyIds = initialHistory.map(item => item.id);
 	
 	// Query to check which analyses still exist
 	const { data, loading } = useQuery(CHECK_ANALYSES_EXIST, {
 		variables: { ids: historyIds },
-		skip: historyIds.length === 0,
+		skip: historyIds.length === 0 || !userId,
 		fetchPolicy: "network-only" // Always check the server
 	});
 	
 	useEffect(() => {
-		if (data && data.checkAnalysesExist) {
+		if (data?.checkAnalysesExist && userId) {
 			// Filter history to only include existing analyses
 			const existingIds = new Set(data.checkAnalysesExist);
 			const filteredHistory = initialHistory.filter(item => existingIds.has(item.id));
 			
 			// Update localStorage with the filtered history
-			localStorage.setItem("viewedReports", JSON.stringify(filteredHistory));
+			const historyKey = `viewedReports_${userId}`;
+			localStorage.setItem(historyKey, JSON.stringify(filteredHistory));
 			
 			// Show only the 5 most recent
 			setHistoryItems(filteredHistory.slice(0, 5));
-		} else if (initialHistory.length > 0 && !loading) {
+		} else if (initialHistory.length > 0 && !loading && userId) {
 			// If query failed or returned no data but we have history items
 			setHistoryItems(initialHistory.slice(0, 5));
 		}
-	}, [data, loading]);
+	}, [data, loading, userId]);
 
 	const handleRowClick = (id: string) => {
 		router.push(`/reports/${id}`);

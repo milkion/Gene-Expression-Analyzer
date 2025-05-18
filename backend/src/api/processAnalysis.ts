@@ -3,6 +3,7 @@ import { runR } from "../utils/rScriptRunner.js";
 export async function processAnalysis(req, res) {
 	try {
 		const { analysisId, log_threshold, p_threshold } = req.body;
+		const token = req.headers.authorization?.split(" ")[1]; // Extract token
 
 		if (!analysisId) {
 			return res.status(400).json({ error: "Analysis ID is required" });

@@ -88,9 +88,14 @@ export interface ResponseData {
 // Tell Apollo server how we should fetch data associated with each type
 export const resolvers = {
 	Query: {
-		async getAnalyses(): Promise<any[]> {
+		async getAnalyses(_: any, __: any, context): Promise<any[]> {
 			try {
-				return await Analysis.find().populate("dataset").populate("results");
+				if (!context.userId) {
+					throw new Error("Not authenticated");
+				}
+				return await Analysis.find({ user: context.userId })
+					.populate("dataset")
+					.populate("results");
 			} catch (error: unknown) {
 				if (error instanceof Error) {
 					throw new Error(`Failed to fetch analyses: ${error.message}`);
@@ -160,13 +165,22 @@ export const resolvers = {
 				throw new Error("Failed to fetch user: Unknown error");
 			}
 		},
-		async checkAnalysesExist(_: any, { ids }: { ids: string[] }): Promise<string[]> {
+		async checkAnalysesExist(
+			_: any,
+			{ ids }: { ids: string[] }
+		): Promise<string[]> {
 			try {
-				const existingAnalyses = await Analysis.find({ _id: { $in: ids } }).select('_id');
-				return existingAnalyses.map(analysis => analysis._id.toString());
+				const existingAnalyses = await Analysis.find({
+					_id: { $in: ids },
+				}).select("_id");
+				return existingAnalyses.map((analysis) => analysis._id.toString());
 			} catch (error) {
 				console.error("Error checking analyses existence:", error);
-				throw new Error(`Failed to check analyses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+				throw new Error(
+					`Failed to check analyses: ${
+						error instanceof Error ? error.message : "Unknown error"
+					}`
+				);
 			}
 		},
 		async forumPosts() {
@@ -202,11 +216,15 @@ export const resolvers = {
 	Mutation: {
 		async createAnalysis(
 			_: ResolverParent,
-			{ input }: CreateAnalysisArgs
+			{ input }: CreateAnalysisArgs,
+			context
 		): Promise<any> {
 			try {
 				const { datasetInput, logThreshold = 1, pThreshold = 0.05 } = input;
 				
+				if (!context.userId) {
+					throw new Error("Not authenticated");
+				}
 				// Create dataset
 				const dataset = new Dataset({
 					name: datasetInput.name,
@@ -214,24 +232,31 @@ export const resolvers = {
 					uploadedAt: new Date(),
 					size: datasetInput.size,
 				});
-				
-				await dataset.save();
-				
-				// Create analysis with thresholds
+
+				const savedDataset = await dataset.save();
+
+				// Create a new analysis linked to this dataset and user
 				const analysis = new Analysis({
 					date: new Date(),
 					status: "ANALYZING",
 					dataset: dataset._id,
+					user: context.userId,
 					logThreshold,
 					pThreshold,
 				});
-				
-				await analysis.save();
-				
-				return analysis;
-			} catch (error) {
-				console.error("Error creating analysis:", error);
-				throw new Error(`Failed to create analysis: ${error.message}`);
+
+				const savedAnalysis = await analysis.save();
+
+				// Populate the dataset field for the response
+				await savedAnalysis.populate("dataset");
+				await savedAnalysis.populate("user");
+
+				return savedAnalysis;
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					throw new Error(`Failed to create analysis: ${error.message}`);
+				}
+				throw new Error("Failed to create analysis: Unknown error");
 			}
 		},
 		async deleteAnalysis(_, { id }) {
@@ -351,12 +376,10 @@ export const resolvers = {
 					throw new Error("Email already exists");
 				}
 
-				const hashedPassword = await bcrypt.hash(userInput.password, 10);
-
 				const newUser = new User({
 					name: userInput.name,
 					email: userInput.email,
-					password: hashedPassword, // Fixed: Use hashed password
+					password: userInput.password, // Use raw password, let middleware handle hashing
 				});
 
 				const savedUser = await newUser.save();
@@ -611,6 +634,12 @@ export const resolvers = {
 				}
 				throw new Error("Failed to fetch dataset: Unknown error");
 			}
+		},
+		async user(parent: any): Promise<any> {
+			if (parent.user instanceof mongoose.Types.ObjectId) {
+				return await User.findById(parent.user);
+			}
+			return parent.user;
 		},
 	},
 	Result: {

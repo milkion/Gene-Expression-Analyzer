@@ -58,6 +58,15 @@ const GET_ANALYSIS = gql`
 	}
 `;
 
+// Add this ME_QUERY at the top with your other imports
+const ME_QUERY = gql`
+	query Me {
+		me {
+			id
+		}
+	}
+`;
+
 export default function DetailedReportPage() {
 	const params = useParams();
 	const analysisId = params.id as string;
@@ -65,6 +74,9 @@ export default function DetailedReportPage() {
 	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 	const { reportRef, handleDownloadPDF } = useDownloadPDF(analysisId); // Use the hook
 
+	// Add query to get user ID
+	const { data: userData } = useQuery(ME_QUERY);
+	
 	// Fetch data using useQuery
 	const { loading, error, data } = useQuery(GET_ANALYSIS, {
 		variables: { id: analysisId },
@@ -77,7 +89,10 @@ export default function DetailedReportPage() {
 	}, []);
 
 	useEffect(() => {
-		if (data?.analysis && isClient) {
+		if (data?.analysis && isClient && userData?.me?.id) {
+			const userId = userData.me.id;
+			const historyKey = `viewedReports_${userId}`;
+			
 			const historyItem = {
 				id: analysisId,
 				datasetName: data.analysis.dataset?.name || "Unknown Dataset",
@@ -85,7 +100,7 @@ export default function DetailedReportPage() {
 				dateCreated: new Date().toLocaleString(),
 			};
 
-			const existingHistory = localStorage.getItem("viewedReports");
+			const existingHistory = localStorage.getItem(historyKey);
 			let history = existingHistory ? JSON.parse(existingHistory) : [];
 
 			history = history.filter((item) => item.id !== analysisId);
@@ -94,9 +109,9 @@ export default function DetailedReportPage() {
 
 			history = history.slice(0, 10);
 
-			localStorage.setItem("viewedReports", JSON.stringify(history));
+			localStorage.setItem(historyKey, JSON.stringify(history));
 		}
-	}, [data, analysisId, isClient]);
+	}, [data, analysisId, isClient, userData]);
 
 	if (loading) return <p>Loading analysis data...</p>;
 	if (error) return <p>Error: {error.message}</p>;
