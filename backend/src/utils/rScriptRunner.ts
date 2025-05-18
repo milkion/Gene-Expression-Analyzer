@@ -78,6 +78,17 @@ export async function runR(
 			return;
 		}
 
+		const phenotypeFilePath = "../public/dragdrop_files/unzipped/phenotype_data.csv";
+		if (!fs.existsSync(phenotypeFilePath)) {
+			console.error("ERROR: Phenotype CSV file NOT found.");
+			await updateAnalysisStatus(
+				analysisId,
+				"FAILED",
+				"Required file 'phenotype_data.csv' not found. Please check your uploaded ZIP file."
+			);
+			return;
+		}
+
 		console.log("CSV file found at:", expressionFilePath);
 		console.log("Starting R script after successful extraction...");
 
