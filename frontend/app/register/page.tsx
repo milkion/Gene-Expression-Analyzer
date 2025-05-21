@@ -32,6 +32,10 @@ export default function RegisterPage() {
 			localStorage.setItem("token", data.createUser.token);
 			// Redirect to dashboard
 			router.push("/");
+			setTimeout(() => {
+				window.location.reload(); // Now reloads the home page after router.push
+			}, 100); // A short delay (100ms) gives the router time to navigate
+
 		},
 		onError: (err) => {
 			setError(err.message);

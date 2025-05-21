@@ -31,24 +31,24 @@ export function QuickHistory() {
 	const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
 	const [userId, setUserId] = useState<string | null>(null);
 	const router = useRouter();
-	
+
 	// First, fetch the current user's ID
 	const { data: userData } = useQuery(ME_QUERY);
-	
+
 	useEffect(() => {
 		if (userData?.me?.id) {
 			setUserId(userData.me.id);
 		}
 	}, [userData]);
-	
+
 	// Get all analysis IDs from history
 	const loadHistory = () => {
 		if (!userId) return [];
-		
+
 		// Use user-specific key for localStorage
 		const historyKey = `viewedReports_${userId}`;
 		const savedHistory = localStorage.getItem(historyKey);
-		
+
 		if (savedHistory) {
 			try {
 				const parsedHistory = JSON.parse(savedHistory);
@@ -60,27 +60,27 @@ export function QuickHistory() {
 		}
 		return [];
 	};
-	
+
 	const initialHistory = userId ? loadHistory() : [];
 	const historyIds = initialHistory.map(item => item.id);
-	
+
 	// Query to check which analyses still exist
 	const { data, loading } = useQuery(CHECK_ANALYSES_EXIST, {
 		variables: { ids: historyIds },
 		skip: historyIds.length === 0 || !userId,
 		fetchPolicy: "network-only" // Always check the server
 	});
-	
+
 	useEffect(() => {
 		if (data?.checkAnalysesExist && userId) {
 			// Filter history to only include existing analyses
 			const existingIds = new Set(data.checkAnalysesExist);
 			const filteredHistory = initialHistory.filter(item => existingIds.has(item.id));
-			
+
 			// Update localStorage with the filtered history
 			const historyKey = `viewedReports_${userId}`;
 			localStorage.setItem(historyKey, JSON.stringify(filteredHistory));
-			
+
 			// Show only the 5 most recent
 			setHistoryItems(filteredHistory.slice(0, 5));
 		} else if (initialHistory.length > 0 && !loading && userId) {
@@ -94,8 +94,18 @@ export function QuickHistory() {
 	};
 
 	if (historyItems.length === 0) {
-		return null; // Don't show the component if there's no history
+		return (
+			<div className="px-20 mt-2">
+				<div className="backdrop-blur-md bg-white/30 p-6 rounded-3xl border border-white/40 shadow-xl">
+					<h2 className="text-2xl font-medium ml-4 my-4">Quick History</h2>
+					<div className="px-20 mt-2 text-gray-500 italic">
+						No recent analyses found. Once you view some reports, they'll appear here.
+					</div>
+				</div>
+			</div>
+		);
 	}
+
 
 	return (
 		<div className="px-20 mt-2">

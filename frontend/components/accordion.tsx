@@ -62,7 +62,7 @@ export function FAQAccordion() {
 					<p className="text-lg leading-relaxed text-gray-700 mb-3">
 						BioGeneX accepts ZIP files containing these <strong>exact filename</strong> CSV files:
 					</p>
-					
+
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div className="bg-gray-50 rounded-lg p-4">
 							<h3 className="font-semibold text-lg mb-2">1. expression_data.csv</h3>
@@ -73,7 +73,7 @@ export function FAQAccordion() {
 								<li>Numeric values for expression measurements</li>
 							</ul>
 						</div>
-						
+
 						<div className="bg-gray-50 rounded-lg p-4">
 							<h3 className="font-semibold text-lg mb-2">2. phenotype_data.csv</h3>
 							<ul className="list-disc ml-6 space-y-2 text-lg text-gray-700">
@@ -85,24 +85,24 @@ export function FAQAccordion() {
 							</ul>
 						</div>
 					</div>
-					
+
 					<div className="bg-amber-50 border-l-4 border-amber-500 p-4 mt-6">
 						<p className="text-lg leading-relaxed text-amber-800">
 							<strong>Note:</strong> The analysis will fail if the files are not named exactly as specified or if no control samples are identified.
 						</p>
 					</div>
-					
+
 					<p className="text-lg leading-relaxed text-gray-700 mt-4">
 						Both files should be bundled in a ZIP archive (max size: 10MB) for upload.
 					</p>
 					<div className="mt-4">
-					<a
-						href="/SampleDataset/sample_dataset.zip"
-						download
-						className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-					>
-						Download Sample Dataset
-					</a>
+						<a
+							href="/SampleDataset/sample_dataset.zip"
+							download
+							className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+						>
+							Download Sample Dataset
+						</a>
 					</div>
 				</AccordionContent>
 			</AccordionItem>
@@ -113,17 +113,17 @@ export function FAQAccordion() {
 				</AccordionTrigger>
 				<AccordionContent className="px-4 py-2">
 					<p className="text-lg leading-relaxed text-gray-700 mb-3">
-						Our platform performs comprehensive differential expression analysis using 
-                        <strong>Limma (Linear Models for Microarray and RNA-Seq Data)</strong>, a powerful statistical 
-                        package designed specifically for gene expression analysis.
+						Our platform performs comprehensive differential expression analysis using
+						<strong>Limma (Linear Models for Microarray and RNA-Seq Data)</strong>, a powerful statistical
+						package designed specifically for gene expression analysis.
 					</p>
 					<p className="text-lg leading-relaxed text-gray-700 mb-3">
-						Limma employs sophisticated <strong>linear modeling techniques</strong> to identify <strong>differentially 
-                        expressed genes</strong> between experimental conditions. The analysis calculates <strong>log fold 
-                        changes</strong> to measure expression differences, performs rigorous <strong>statistical significance 
-                        testing</strong>, and applies <strong>multiple testing correction</strong> to control <strong>false discovery rates</strong>. 
-                        Our implementation also generates intuitive <strong>visualizations</strong> of expression patterns and 
-                        provides an <strong>interactive interface</strong> for exploring results in depth.
+						Limma employs sophisticated <strong>linear modeling techniques</strong> to identify <strong>differentially
+							expressed genes</strong> between experimental conditions. The analysis calculates <strong>log fold
+								changes</strong> to measure expression differences, performs rigorous <strong>statistical significance
+									testing</strong>, and applies <strong>multiple testing correction</strong> to control <strong>false discovery rates</strong>.
+						Our implementation also generates intuitive <strong>visualizations</strong> of expression patterns and
+						provides an <strong>interactive interface</strong> for exploring results in depth.
 					</p>
 				</AccordionContent>
 			</AccordionItem>
