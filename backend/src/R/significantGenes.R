@@ -60,7 +60,7 @@ if (!dir.exists(output_dir)) {
 # # Check if any matching files are found
 # if (length(file_list) == 0) {
 #   stop("No matching GSE dataset found in ", dataset_dir)
-# } 
+# }
 
 # gse_file <- file_list[1]  # Select the first file
 
@@ -106,6 +106,8 @@ uniqueGeneSymbols <- make.unique(ifelse(is.na(geneSymbols), "NA", geneSymbols))
 # Assign row names
 rownames(expressionData) <- uniqueGeneSymbols
 
+geneSymbol_map <- setNames(geneSymbols, uniqueGeneSymbols)
+
 # Verify row names
 cat("Row names after assignment:\n")
 print(head(rownames(expressionData)))
@@ -139,7 +141,8 @@ results <- topTable(fit, coef = 2, number = Inf)
 print(head(results))
 
 # Map correct gene symbols
-results$geneSymbol <- rownames(results)
+results$uniqueGeneSymbol <- rownames(results)
+results$geneSymbol <- geneSymbol_map[rownames(results)]
 
 # Verify output
 head(results[, c("geneSymbol", "logFC", "adj.P.Val")])
@@ -165,16 +168,16 @@ png(png_file, width = 800, height = 600)
 
 # Subset results for significant genes with symbols
 # Assume the rownames of results are gene symbols (already present from your expression matrix)
-results$geneSymbol <- rownames(results)
+# results$geneSymbol <- rownames(results)
 
 # Subset significant results based on adjusted p-value and log fold change
 sig_results <- subset(results, adj.P.Val < pThreshold & abs(logFC) > logThreshold)
 
 # Plot
 volcano_plot <- ggplot(results, aes(x = logFC, y = -log10(adj.P.Val))) +
-  geom_point(aes(color = ifelse(adj.P.Val < pThreshold & abs(logFC) > logThreshold, 
-                                "Significant", "Not Significant")), 
-             alpha = 0.6) +
+  geom_point(aes(color = ifelse(adj.P.Val < pThreshold & abs(logFC) > logThreshold,
+      "Significant", "Not Significant")),
+    alpha = 0.6) +
   scale_color_manual(
     values = c("Not Significant" = "black", "Significant" = "red"),
     name = paste0("adj.P.Val < ", pThreshold, " & |logFC| > ", logThreshold)
@@ -183,14 +186,14 @@ volcano_plot <- ggplot(results, aes(x = logFC, y = -log10(adj.P.Val))) +
   geom_vline(xintercept = c(-logThreshold, logThreshold), linetype = "dashed", color = "blue") +
   theme_minimal() +
   labs(title = "Volcano Plot",
-       x = "Log2 Fold Change",
-       y = "-Log10 Adjusted P-value") +
+    x = "Log2 Fold Change",
+    y = "-Log10 Adjusted P-value") +
   geom_text_repel(data = sig_results,
-                  aes(label = geneSymbol),
-                  size = 3,
-                  max.overlaps = 20,
-                  box.padding = 0.3,
-                  point.padding = 0.2)
+    aes(label = geneSymbol),
+    size = 3,
+    max.overlaps = 20,
+    box.padding = 0.3,
+    point.padding = 0.2)
 
 #Red dots - genes significantly differential expressed, fold change > 1
 volcano_plot
@@ -211,7 +214,7 @@ paste("Number of significant genes:", nrow(significantGenes))
 
 # Convert Probe IDs to Gene Symbols
 
-# geneSymbols <- mapIds(illuminaHumanv4.db, 
+# geneSymbols <- mapIds(illuminaHumanv4.db,
 #                       keys = probeIDs,
 #                       column = "SYMBOL",
 #                       keytype = "PROBEID",
@@ -256,6 +259,7 @@ significantGenes$uniprotID <- uniprot_map[significantGenes$geneSymbol]
 
 # Save results as CSV
 output_csv <- file.path(output_dir, "significantGenes.csv")
+results <- results[, c("uniqueGeneSymbol", "geneSymbol", setdiff(names(results), c("uniqueGeneSymbol", "geneSymbol")))]
 write.csv(significantGenes, file = output_csv, row.names = TRUE)
 
 # Format JSON output

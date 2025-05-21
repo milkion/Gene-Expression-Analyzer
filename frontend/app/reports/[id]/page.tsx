@@ -225,6 +225,9 @@ export default function DetailedReportPage() {
 		return keywords.replace(/[\s,]+/g, "+") + "+";
 	};
 
+	const geneSymbolSet = [...new Set(analysis.result?.results?.map((r) => r.gene.symbol))];
+
+
 	return (
 		<Protected>
 			<div>
@@ -268,14 +271,18 @@ export default function DetailedReportPage() {
 										<div className="bg-white rounded-xl shadow-sm p-6 col-start-2 row-start-1 row-span-2 flex flex-col items-center justify-center text-center">
 											<h3 className="font-semibold text-md mb-4">Top Genes</h3>
 											<ul className="space-y-2">
-												{analysis.result?.results?.slice(0, 5).map((r: any) => (
-													<li
-														key={r.gene?.symbol || `gene-${r.id}`}
-														className="text-lg"
-													>
-														{r.gene?.symbol || "Unknown"}
-													</li>
-												))}
+												{geneSymbolSet.length > 0 ?
+													geneSymbolSet.slice(0, 5).map((gene: any) => (
+														<li
+															key={gene}
+															className="text-lg"
+														>
+															{gene || "Unknown"}
+														</li>
+													)) : <li key="NA" className="text-lg">
+															N/A
+														</li>
+												}
 											</ul>
 										</div>
 
@@ -478,9 +485,7 @@ export default function DetailedReportPage() {
 
 											<div className="bg-gray-100 rounded-2xl pt-10 py-6">
 												<WikipediaGeneTable
-													genes={analysis.result.results.map(
-														(r) => r.gene.symbol
-													)}
+													genes={geneSymbolSet}
 													keywords={analysis.dataset.description}
 												/>
 											</div>
