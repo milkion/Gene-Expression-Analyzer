@@ -31,9 +31,9 @@ export default function LoginPage() {
 			localStorage.setItem("token", data.login.token);
 			// Redirect to dashboard
 			router.push("/");
-			setTimeout(() => {
-				window.location.reload(); // Now reloads the home page after router.push
-			}, 300); // A short delay (100ms) gives the router time to navigate
+			// setTimeout(() => {
+			// 	window.location.reload(); // Now reloads the home page after router.push
+			// }, 300); // A short delay (100ms) gives the router time to navigate
 		},
 		onError: (err) => {
 			setError(err.message);

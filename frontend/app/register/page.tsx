@@ -33,9 +33,9 @@ export default function RegisterPage() {
 			// Redirect to dashboard
 			router.push("/");
 			// Give router.push time to complete and avoid race condition
-			setTimeout(() => {
-				window.location.reload();
-			}, 300);
+			// setTimeout(() => {
+			// 	window.location.reload();
+			// }, 300);
 		},
 		onError: (err) => {
 			setError(err.message);
