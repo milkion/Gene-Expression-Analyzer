@@ -114,7 +114,7 @@ export function FAQAccordion() {
 				<AccordionContent className="px-4 py-2">
 					<p className="text-lg leading-relaxed text-gray-700 mb-3">
 						Our platform performs comprehensive differential expression analysis using
-						<strong>Limma (Linear Models for Microarray and RNA-Seq Data)</strong>, a powerful statistical
+						<strong> Limma (Linear Models for Microarray and RNA-Seq Data)</strong>, a powerful statistical
 						package designed specifically for gene expression analysis.
 					</p>
 					<p className="text-lg leading-relaxed text-gray-700 mb-3">

@@ -33,7 +33,7 @@ export default function LoginPage() {
 			router.push("/");
 			setTimeout(() => {
 				window.location.reload(); // Now reloads the home page after router.push
-			}, 100); // A short delay (100ms) gives the router time to navigate
+			}, 300); // A short delay (100ms) gives the router time to navigate
 		},
 		onError: (err) => {
 			setError(err.message);
